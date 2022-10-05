@@ -1,22 +1,9 @@
 env_files:
   github_token: ./.env
+archives:
+- files:
+  - none*
 build:
   binary: frogdb
-  goos:
-    - darwin
-    - linux
-    - windows
-    - freebsd
-    - netbsd
-    - openbsd
-  goarch:
-    - amd64
-    - "386"
   ignore:
-    - goos: darwin
-      goarch: "386"
-changelog:
-  sort: asc
-  filters:
-    exclude:
-      - '^docs:'
+    - goarch: "386"
