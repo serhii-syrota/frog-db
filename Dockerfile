@@ -1,3 +1,3 @@
-FROM go:latest
-RUN go build .
-CMD [ "./frog.db" ]
+FROM scratch
+ENTRYPOINT ["/frogdb"]
+COPY frogdb /

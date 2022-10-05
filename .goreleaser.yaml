@@ -6,3 +6,6 @@ build:
   binary: frogdb
   ignore:
     - goarch: "386"
+dockers:
+  - image_templates:
+    - sergeycrisp/frogdb
