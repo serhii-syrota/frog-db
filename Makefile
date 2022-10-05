@@ -5,6 +5,7 @@ release:
 	@echo "==> Complete"
 .PHONY: release
 
+# Pre release to debug locally
 pre-release: 
 	@echo "==> Releasing to locals"
 	@goreleaser release --snapshot --rm-dist
