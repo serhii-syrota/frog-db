@@ -95,3 +95,24 @@ func TestRealType(t *testing.T) {
 		assert.Nil(t, res)
 	})
 }
+
+func TestCharType(t *testing.T) {
+	t.Run("recognizes correct string", func(t *testing.T) {
+		val := "a"
+		res, err := NewChar(val, "testing_column")
+		assert.Nil(t, err)
+		assert.Equal(t, 'a', res.Val)
+	})
+	t.Run("return err on incorrect string", func(t *testing.T) {
+		val := "ab"
+		res, err := NewChar(val, "testing_column")
+		assert.NotNil(t, err)
+		assert.Nil(t, res)
+	})
+	t.Run("recognizes correct char", func(t *testing.T) {
+		val := 'a'
+		res, err := NewChar(val, "testing_column")
+		assert.Nil(t, err)
+		assert.Equal(t, 'a', res.Val)
+	})
+}

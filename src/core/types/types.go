@@ -61,3 +61,26 @@ func NewReal(v any, columnName string) (*Real, error) {
 	}
 	return &Real{val}, nil
 }
+
+type Char struct {
+	Val rune
+}
+
+func NewChar(v any, columnName string) (*Char, error) {
+	var val rune
+	value := reflect.ValueOf(v)
+	switch value.Kind() {
+	case reflect.String:
+		if len(value.String()) != 1 {
+			return nil, errs.NewErrValueTypeMismatch(columnName, "rune", v)
+		}
+		for _, runeValue := range value.String() {
+			val = runeValue
+		}
+	case reflect.Int32:
+		val = rune(value.Int())
+	default:
+		return nil, errs.NewErrValueTypeMismatch(columnName, "rune", v)
+	}
+	return &Char{val}, nil
+}
