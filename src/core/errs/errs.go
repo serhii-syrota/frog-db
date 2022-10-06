@@ -71,8 +71,8 @@ type ErrInvalidRange struct {
 	error
 }
 
-func NewErrInvalidRange(columnName string, a, b fmt.Stringer) *ErrInvalidRange {
-	return &ErrInvalidRange{fmt.Errorf("invalid range %v>%v on column %s", columnName, a, b)}
+func NewErrInvalidRange(columnName string, a, b float64) *ErrInvalidRange {
+	return &ErrInvalidRange{fmt.Errorf("invalid range %v>%v on column %s", a, b, columnName)}
 }
 
 type ErrDbIO struct {

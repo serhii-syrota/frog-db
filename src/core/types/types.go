@@ -102,3 +102,24 @@ func NewString(v any, columnName string) (*String, error) {
 	}
 	return &String{val}, nil
 }
+
+type RealInv struct {
+	A float64
+	B float64
+}
+
+func NewRealInv(a, b any, columnName string) (*RealInv, error) {
+	aVal, err := NewReal(a, columnName)
+	if err != nil {
+		return nil, err
+	}
+	bVal, err := NewReal(b, columnName)
+	if err != nil {
+		return nil, err
+	}
+	if aVal.Val > bVal.Val {
+		return nil, errs.NewErrInvalidRange(columnName, aVal.Val, bVal.Val)
+	}
+
+	return &RealInv{aVal.Val, bVal.Val}, nil
+}
