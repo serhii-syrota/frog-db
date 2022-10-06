@@ -116,3 +116,18 @@ func TestCharType(t *testing.T) {
 		assert.Equal(t, 'a', res.Val)
 	})
 }
+
+func TestStringType(t *testing.T) {
+	t.Run("recognizes correct string", func(t *testing.T) {
+		val := "aasd"
+		res, err := NewString(val, "testing_column")
+		assert.Nil(t, err)
+		assert.Equal(t, val, res.Val)
+	})
+	t.Run("recognizes correct char", func(t *testing.T) {
+		val := 'a'
+		res, err := NewString(val, "testing_column")
+		assert.Nil(t, err)
+		assert.Equal(t, "a", res.Val)
+	})
+}

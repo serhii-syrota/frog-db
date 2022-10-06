@@ -84,3 +84,21 @@ func NewChar(v any, columnName string) (*Char, error) {
 	}
 	return &Char{val}, nil
 }
+
+type String struct {
+	Val string
+}
+
+func NewString(v any, columnName string) (*String, error) {
+	var val string
+	value := reflect.ValueOf(v)
+	switch value.Kind() {
+	case reflect.String:
+		val = value.String()
+	case reflect.Int32:
+		val = string(rune(value.Int()))
+	default:
+		return nil, errs.NewErrValueTypeMismatch(columnName, "string", v)
+	}
+	return &String{val}, nil
+}
