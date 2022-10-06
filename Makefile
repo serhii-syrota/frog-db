@@ -11,3 +11,14 @@ pre-release:
 	@goreleaser release --snapshot --rm-dist
 	@echo "==> Complete"
 .PHONY: pre-release
+
+# Run tests
+test: 
+	@echo "==> Running tests"
+	@go test -cover ./...
+	@echo "==> Complete"
+.PHONY: test
+
+watch-tests:
+	@watch -n 0.1 make test
+.PHONY: watch-tests

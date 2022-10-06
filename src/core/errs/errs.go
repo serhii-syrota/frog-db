@@ -55,8 +55,8 @@ type ErrValueTypeMismatch struct {
 	error
 }
 
-func NewErrValueTypeMismatch(columnName, t string) *ErrValueTypeMismatch {
-	return &ErrValueTypeMismatch{fmt.Errorf("cannot create column %s with type %s", columnName, t)}
+func NewErrValueTypeMismatch(columnName, requiredT string, val any) *ErrValueTypeMismatch {
+	return &ErrValueTypeMismatch{fmt.Errorf("%v type is recognized as %T, type %s in column %s required", val, val, requiredT, columnName)}
 }
 
 type ErrInvalidRange struct {
