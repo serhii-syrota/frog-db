@@ -8,14 +8,8 @@ import (
 	"github.com/ssyrota/frog-db/src/core/errs"
 )
 
-// DataType provides validation and matching.
-type DataType interface {
-	Validate() error
-	IsIt() bool
-}
-
 type Integer struct {
-	val int64
+	Val int64
 }
 
 func NewInteger(v any, columnName string) (*Integer, error) {
@@ -30,7 +24,7 @@ func NewInteger(v any, columnName string) (*Integer, error) {
 		val = int64(value.Float())
 	case reflect.String:
 		if parsed, err := strconv.ParseInt(value.String(), 10, 64); err != nil {
-			return nil, errs.NewErrValueTypeMismatch(columnName, "int64", err.Error())
+			return nil, errs.NewErrConvertStringToNum(columnName, "int64", value, err)
 		} else {
 			val = parsed
 		}
@@ -40,6 +34,30 @@ func NewInteger(v any, columnName string) (*Integer, error) {
 	}
 	return &Integer{val}, nil
 }
-func (i *Integer) Value() int64 {
-	return i.val
+
+type Real struct {
+	Val float64
+}
+
+func NewReal(v any, columnName string) (*Real, error) {
+	var val float64
+	value := reflect.ValueOf(v)
+	switch value.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		val = float64(value.Int())
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		val = float64(value.Uint())
+	case reflect.Float32, reflect.Float64:
+		val = value.Float()
+	case reflect.String:
+		if parsed, err := strconv.ParseFloat(value.String(), 64); err != nil {
+			return nil, errs.NewErrConvertStringToNum(columnName, "float64", value, err)
+		} else {
+			val = parsed
+		}
+	default:
+		return nil, errs.NewErrValueTypeMismatch(columnName, "float64", v)
+
+	}
+	return &Real{val}, nil
 }

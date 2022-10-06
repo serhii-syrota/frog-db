@@ -59,6 +59,14 @@ func NewErrValueTypeMismatch(columnName, requiredT string, val any) *ErrValueTyp
 	return &ErrValueTypeMismatch{fmt.Errorf("%v type is recognized as %T, type %s in column %s required", val, val, requiredT, columnName)}
 }
 
+type ErrConvertStringToNUm struct {
+	error
+}
+
+func NewErrConvertStringToNum(columnName, requiredT string, val any, err error) *ErrConvertStringToNUm {
+	return &ErrConvertStringToNUm{fmt.Errorf("failed to parse %v: %s, type %s in column %s required", val, err.Error(), requiredT, columnName)}
+}
+
 type ErrInvalidRange struct {
 	error
 }
