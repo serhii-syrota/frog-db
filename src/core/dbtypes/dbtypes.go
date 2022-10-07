@@ -1,12 +1,34 @@
-// Package types provides supported db types
-package types
+// Package dbtypes provides supported db types
+package dbtypes
 
 import (
 	"fmt"
 	"reflect"
 
 	"github.com/spf13/cast"
-	"github.com/ssyrota/frog-db/src/core/errs"
+	errs "github.com/ssyrota/frog-db/src/core/err"
+)
+
+type Type string
+
+var AvailableTypes = []Type{Integer, Real, Char, String, RealInv, Image}
+
+func IsAvailableType(val string) bool {
+	for _, t := range AvailableTypes {
+		if string(t) == val {
+			return true
+		}
+	}
+	return false
+}
+
+const (
+	Integer Type = "integer"
+	Real    Type = "real"
+	Char    Type = "char"
+	String  Type = "string"
+	RealInv Type = "realInv"
+	Image   Type = "image"
 )
 
 func NewInteger(v any) (*int64, error) {
@@ -52,12 +74,12 @@ func NewString(v any) (*string, error) {
 	return &res, nil
 }
 
-type RealInv struct {
+type TRealInv struct {
 	A float64
 	B float64
 }
 
-func NewRealInv(a, b any) (*RealInv, error) {
+func NewRealInv(a, b any) (*TRealInv, error) {
 	aVal, err := NewReal(a)
 	if err != nil {
 		return nil, err
@@ -70,5 +92,5 @@ func NewRealInv(a, b any) (*RealInv, error) {
 		return nil, errs.NewErrInvalidRange(*aVal, *bVal)
 	}
 
-	return &RealInv{*aVal, *bVal}, nil
+	return &TRealInv{*aVal, *bVal}, nil
 }
