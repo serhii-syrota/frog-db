@@ -37,3 +37,30 @@ func TestTableCreate(t *testing.T) {
 		assert.IsType(t, &errs.ErrTableAlreadyExists{}, err)
 	})
 }
+
+// Test db table deletion.
+func TestTableDelete(t *testing.T) {
+	t.Run("delete existing table", func(t *testing.T) {
+		db := NewDb()
+		tableName := "frog"
+		fields := map[string]string{"id": "integer", "name": "string"}
+		sch, err := schema.New(fields)
+		assert.Nil(t, err)
+		err = db.CreateTable(tableName, sch)
+		assert.Nil(t, err)
+		err = db.DeleteTable(tableName)
+		assert.Nil(t, err)
+	})
+
+	t.Run("fail on try to delete non existed table", func(t *testing.T) {
+		db := NewDb()
+		tableName := "frog"
+		fields := map[string]string{"id": "integer", "name": "string"}
+		sch, err := schema.New(fields)
+		assert.Nil(t, err)
+		err = db.CreateTable(tableName, sch)
+		assert.Nil(t, err)
+		err = db.DeleteTable("unknown")
+		assert.IsType(t, &errs.ErrTableNotFound{}, err)
+	})
+}

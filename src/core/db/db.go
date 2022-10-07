@@ -35,7 +35,18 @@ func (d *Database) TableSchema(name string) (map[string]dbtypes.Type, error) {
 	return table.Schema(), nil
 }
 
+// DeleteTable implementation.
+func (d *Database) DeleteTable(name string) error {
+	_, ok := d.tables[name]
+	if !ok {
+		return errs.NewErrTableNotFound(name)
+	}
+	delete(d.tables, name)
+	return nil
+}
+
 type Db interface {
 	CreateTable(name string, schema *schema.T) error
+	DeleteTable(name string) error
 	TableSchema(name string) (map[string]dbtypes.Type, error)
 }
