@@ -2,77 +2,36 @@
 package types
 
 import (
+	"fmt"
 	"reflect"
-	"strconv"
 
+	"github.com/spf13/cast"
 	"github.com/ssyrota/frog-db/src/core/errs"
 )
 
-type Integer struct {
-	Val int64
-}
-
-func NewInteger(v any, columnName string) (*Integer, error) {
-	var val int64
-	value := reflect.ValueOf(v)
-	switch value.Kind() {
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		val = value.Int()
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		val = int64(value.Uint())
-	case reflect.Float32, reflect.Float64:
-		val = int64(value.Float())
-	case reflect.String:
-		if parsed, err := strconv.ParseInt(value.String(), 10, 64); err != nil {
-			return nil, errs.NewErrConvertStringToNum(columnName, "int64", value, err)
-		} else {
-			val = parsed
-		}
-	default:
-		return nil, errs.NewErrValueTypeMismatch(columnName, "int64", v)
-
+func NewInteger(v any) (*int64, error) {
+	res, err := cast.ToInt64E(v)
+	if err != nil {
+		return nil, err
 	}
-	return &Integer{val}, nil
+	return &res, nil
 }
 
-type Real struct {
-	Val float64
-}
-
-func NewReal(v any, columnName string) (*Real, error) {
-	var val float64
-	value := reflect.ValueOf(v)
-	switch value.Kind() {
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		val = float64(value.Int())
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		val = float64(value.Uint())
-	case reflect.Float32, reflect.Float64:
-		val = value.Float()
-	case reflect.String:
-		if parsed, err := strconv.ParseFloat(value.String(), 64); err != nil {
-			return nil, errs.NewErrConvertStringToNum(columnName, "float64", value, err)
-		} else {
-			val = parsed
-		}
-	default:
-		return nil, errs.NewErrValueTypeMismatch(columnName, "float64", v)
-
+func NewReal(v any) (*float64, error) {
+	res, err := cast.ToFloat64E(v)
+	if err != nil {
+		return nil, err
 	}
-	return &Real{val}, nil
+	return &res, nil
 }
 
-type Char struct {
-	Val rune
-}
-
-func NewChar(v any, columnName string) (*Char, error) {
+func NewChar(v any) (*rune, error) {
 	var val rune
 	value := reflect.ValueOf(v)
 	switch value.Kind() {
 	case reflect.String:
 		if len(value.String()) != 1 {
-			return nil, errs.NewErrValueTypeMismatch(columnName, "rune", v)
+			return nil, fmt.Errorf("%s must contain exact 1 symbol", v)
 		}
 		for _, runeValue := range value.String() {
 			val = runeValue
@@ -80,27 +39,17 @@ func NewChar(v any, columnName string) (*Char, error) {
 	case reflect.Int32:
 		val = rune(value.Int())
 	default:
-		return nil, errs.NewErrValueTypeMismatch(columnName, "rune", v)
+		return nil, fmt.Errorf("unknown type provided for rune, %T", v)
 	}
-	return &Char{val}, nil
+	return &val, nil
 }
 
-type String struct {
-	Val string
-}
-
-func NewString(v any, columnName string) (*String, error) {
-	var val string
-	value := reflect.ValueOf(v)
-	switch value.Kind() {
-	case reflect.String:
-		val = value.String()
-	case reflect.Int32:
-		val = string(rune(value.Int()))
-	default:
-		return nil, errs.NewErrValueTypeMismatch(columnName, "string", v)
+func NewString(v any) (*string, error) {
+	res, err := cast.ToStringE(v)
+	if err != nil {
+		return nil, err
 	}
-	return &String{val}, nil
+	return &res, nil
 }
 
 type RealInv struct {
@@ -108,18 +57,18 @@ type RealInv struct {
 	B float64
 }
 
-func NewRealInv(a, b any, columnName string) (*RealInv, error) {
-	aVal, err := NewReal(a, columnName)
+func NewRealInv(a, b any) (*RealInv, error) {
+	aVal, err := NewReal(a)
 	if err != nil {
 		return nil, err
 	}
-	bVal, err := NewReal(b, columnName)
+	bVal, err := NewReal(b)
 	if err != nil {
 		return nil, err
 	}
-	if aVal.Val > bVal.Val {
-		return nil, errs.NewErrInvalidRange(columnName, aVal.Val, bVal.Val)
+	if *aVal > *bVal {
+		return nil, errs.NewErrInvalidRange(*aVal, *bVal)
 	}
 
-	return &RealInv{aVal.Val, bVal.Val}, nil
+	return &RealInv{*aVal, *bVal}, nil
 }

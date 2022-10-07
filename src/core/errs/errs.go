@@ -51,28 +51,12 @@ func NewErrInvalidTypeProvided(columnName, t string) *ErrInvalidTypeProvided {
 	return &ErrInvalidTypeProvided{fmt.Errorf("cannot create column %s with type %s", columnName, t)}
 }
 
-type ErrValueTypeMismatch struct {
-	error
-}
-
-func NewErrValueTypeMismatch(columnName, requiredT string, val any) *ErrValueTypeMismatch {
-	return &ErrValueTypeMismatch{fmt.Errorf("%v type is recognized as %T, type %s in column %s required", val, val, requiredT, columnName)}
-}
-
-type ErrConvertStringToNUm struct {
-	error
-}
-
-func NewErrConvertStringToNum(columnName, requiredT string, val any, err error) *ErrConvertStringToNUm {
-	return &ErrConvertStringToNUm{fmt.Errorf("failed to parse %v: %s, type %s in column %s required", val, err.Error(), requiredT, columnName)}
-}
-
 type ErrInvalidRange struct {
 	error
 }
 
-func NewErrInvalidRange(columnName string, a, b float64) *ErrInvalidRange {
-	return &ErrInvalidRange{fmt.Errorf("invalid range %v>%v on column %s", a, b, columnName)}
+func NewErrInvalidRange(a, b float64) *ErrInvalidRange {
+	return &ErrInvalidRange{fmt.Errorf("invalid range %v>%v", a, b)}
 }
 
 type ErrDbIO struct {
