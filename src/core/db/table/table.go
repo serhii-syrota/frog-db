@@ -12,22 +12,22 @@ import (
 
 type ColumnSet map[string]any
 
-func NewTable(sch *schema.T) *T {
+func NewTable(sch schema.T) *T {
 	return &T{schema: sch}
 }
 
 // Table with schema, data and crud commands
 type T struct {
 	mu     sync.RWMutex
-	schema *schema.T
+	schema schema.T
 	data   []ColumnSet
 }
 
 // Introspect schema
-func (t *T) Schema() map[string]dbtypes.Type {
+func (t *T) Schema() schema.T {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
-	return t.schema.Val
+	return t.schema
 }
 
 // Insert rows to table
@@ -118,7 +118,7 @@ rows:
 func (t *T) setFromRaw(raw ColumnSet) (ColumnSet, error) {
 	condition := make(ColumnSet, len(raw))
 	for k, v := range raw {
-		dataType, ok := t.schema.Val[k]
+		dataType, ok := t.schema[k]
 		if !ok {
 			return nil, errs.NewErrColumnNotFound(k)
 		}

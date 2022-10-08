@@ -6,13 +6,14 @@ import (
 
 	"github.com/ssyrota/frog-db/src/core/db/schema"
 	"github.com/ssyrota/frog-db/src/core/db/table"
+	dbtypes "github.com/ssyrota/frog-db/src/core/db/types"
 	errs "github.com/ssyrota/frog-db/src/core/err"
 )
 
 type Db interface {
 	Execute(command any) (*[]table.ColumnSet, error)
 	StoreDump() error
-	// IntrospectSchema()
+	IntrospectSchema(name string) (schema.T, error)
 	// ExportData()
 	// ImportData()
 }
@@ -27,9 +28,22 @@ func New(path string) (*Database, error) {
 
 var _ Db = new(Database)
 
+type Dump struct {
+	schema map[string]schema.T
+}
+
 // StoreDump implementation.
 func (db *Database) StoreDump() error {
 	return nil
+}
+
+// IntrospectSchema implementation.
+func (db *Database) IntrospectSchema(name string) (map[string]dbtypes.Type, error) {
+	table, err := db.table(name)
+	if err != nil {
+		return nil, err
+	}
+	return table.Schema(), nil
 }
 
 // Execute implementation.
@@ -67,7 +81,7 @@ func (d *Database) dropTable(command CommandDropTable) (*[]table.ColumnSet, erro
 
 type CommandCreateTable struct {
 	Name   string
-	Schema *schema.T
+	Schema schema.T
 }
 
 func (d *Database) createTable(command CommandCreateTable) (*[]table.ColumnSet, error) {
