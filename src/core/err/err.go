@@ -19,20 +19,12 @@ func NewErrTableNotFound(tableName string) *ErrTableNotFound {
 	return &ErrTableNotFound{fmt.Errorf("table %s not found", tableName)}
 }
 
-type ErrColumnAlreadyExists struct {
-	error
-}
-
-func NewErrColumnAlreadyExists(columnName, tableName string) *ErrColumnAlreadyExists {
-	return &ErrColumnAlreadyExists{fmt.Errorf("column %s already exists in table %s", columnName, tableName)}
-}
-
 type ErrColumnNotFound struct {
 	error
 }
 
-func NewErrColumnNotFound(columnName, tableName string) *ErrColumnNotFound {
-	return &ErrColumnNotFound{fmt.Errorf("column %s not found in table %s", columnName, tableName)}
+func NewErrColumnNotFound(columnName string) *ErrColumnNotFound {
+	return &ErrColumnNotFound{fmt.Errorf("column %s not found", columnName)}
 }
 
 type ErrNoColumns struct {
@@ -57,6 +49,14 @@ type ErrInvalidRange struct {
 
 func NewErrInvalidRange(a, b float64) *ErrInvalidRange {
 	return &ErrInvalidRange{fmt.Errorf("invalid range %v>%v", a, b)}
+}
+
+type ErrInvalidRangeDeclaration struct {
+	error
+}
+
+func NewErrInvalidRangeDeclaration() *ErrInvalidRangeDeclaration {
+	return &ErrInvalidRangeDeclaration{fmt.Errorf("invalid range declaration, should be provided as map with \"from\",\"to\" fields")}
 }
 
 type ErrDbIO struct {

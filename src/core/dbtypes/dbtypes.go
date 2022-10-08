@@ -11,15 +11,34 @@ import (
 
 type Type string
 
-var AvailableTypes = []Type{Integer, Real, Char, String, RealInv, Image}
+var AvailableTypeNames = []Type{Integer, Real, Char, String, RealInv, Image}
 
-func IsAvailableType(val string) bool {
-	for _, t := range AvailableTypes {
+func IsAvailableName(val string) bool {
+	for _, t := range AvailableTypeNames {
 		if string(t) == val {
 			return true
 		}
 	}
 	return false
+}
+
+func NewDataVal(dataType Type, val any) (any, error) {
+	switch dataType {
+	case Integer:
+		return NewInteger(val)
+	case Real:
+		return NewReal(val)
+	case Char:
+		return NewChar(val)
+	case String:
+		return NewString(val)
+	case RealInv:
+		return NewRealInv(val)
+	case Image:
+		return nil, fmt.Errorf("%s is not implemented", dataType)
+	default:
+		return nil, fmt.Errorf("%s is invalid data type", dataType)
+	}
 }
 
 const (
@@ -79,7 +98,19 @@ type TRealInv struct {
 	B float64
 }
 
-func NewRealInv(a, b any) (*TRealInv, error) {
+func NewRealInv(val any) (*TRealInv, error) {
+	data, ok := val.(map[string]any)
+	if !ok {
+		return nil, errs.NewErrInvalidRangeDeclaration()
+	}
+	a, ok := data["a"]
+	if !ok {
+		return nil, errs.NewErrInvalidRangeDeclaration()
+	}
+	b, ok := data["b"]
+	if !ok {
+		return nil, errs.NewErrInvalidRangeDeclaration()
+	}
 	aVal, err := NewReal(a)
 	if err != nil {
 		return nil, err

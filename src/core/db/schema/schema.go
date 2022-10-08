@@ -12,7 +12,7 @@ type T struct {
 func New(data map[string]string) (*T, error) {
 	schema := make(map[string]dbtypes.Type)
 	for k, v := range data {
-		if !dbtypes.IsAvailableType(v) {
+		if !dbtypes.IsAvailableName(v) {
 			return nil, errs.NewErrInvalidTypeProvided(k, v)
 		}
 		schema[k] = dbtypes.Type(v)
