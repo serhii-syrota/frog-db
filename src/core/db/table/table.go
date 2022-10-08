@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/ssyrota/frog-db/src/core/db/schema"
-	"github.com/ssyrota/frog-db/src/core/dbtypes"
+	dbtypes "github.com/ssyrota/frog-db/src/core/db/types"
 	errs "github.com/ssyrota/frog-db/src/core/err"
 	"golang.org/x/exp/slices"
 )
