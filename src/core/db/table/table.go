@@ -1,9 +1,9 @@
 package table
 
 import (
+	"reflect"
 	"sync"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/ssyrota/frog-db/src/core/db/schema"
 	dbtypes "github.com/ssyrota/frog-db/src/core/db/types"
 	errs "github.com/ssyrota/frog-db/src/core/err"
@@ -111,7 +111,7 @@ func (t *T) filter(rawCondition ColumnSet) (*[]int, error) {
 rows:
 	for i, row := range t.data {
 		for k, v := range condition {
-			if !cmp.Equal(row[k], v) {
+			if !reflect.DeepEqual(row[k], v) {
 				continue rows
 			}
 		}
