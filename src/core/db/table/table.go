@@ -12,8 +12,13 @@ import (
 
 type ColumnSet map[string]any
 
-func NewTable(sch schema.T) *T {
-	return &T{schema: sch}
+func NewTable(sch schema.T) (*T, error) {
+	for column, t := range sch {
+		if !dbtypes.IsAvailableName(string(t)) {
+			return nil, errs.NewErrInvalidTypeProvided(column, string(t))
+		}
+	}
+	return &T{schema: sch}, nil
 }
 
 // Table with schema, data and crud commands

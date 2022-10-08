@@ -1,7 +1,6 @@
 package db
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/ssyrota/frog-db/src/core/db/schema"
@@ -12,8 +11,8 @@ import (
 
 type Db interface {
 	Execute(command any) (*[]table.ColumnSet, error)
-	StoreDump() error
 	IntrospectSchema(name string) (schema.T, error)
+	StoreDump() error
 	// ExportData()
 	// ImportData()
 }
@@ -27,10 +26,6 @@ func New(path string) (*Database, error) {
 }
 
 var _ Db = new(Database)
-
-type Dump struct {
-	schema map[string]schema.T
-}
 
 // StoreDump implementation.
 func (db *Database) StoreDump() error {
@@ -49,20 +44,20 @@ func (db *Database) IntrospectSchema(name string) (map[string]dbtypes.Type, erro
 // Execute implementation.
 func (db *Database) Execute(command any) (*[]table.ColumnSet, error) {
 	switch typedCommand := command.(type) {
-	case CommandDropTable:
-		return db.dropTable(typedCommand)
-	case CommandCreateTable:
-		return db.createTable(typedCommand)
-	case CommandInsert:
-		return db.runInsert(typedCommand)
-	case CommandSelect:
-		return db.runSelect(typedCommand)
-	case CommandUpdate:
-		return db.runUpdate(typedCommand)
-	case CommandDelete:
-		return db.runDelete(typedCommand)
+	case *CommandDropTable:
+		return db.dropTable(*typedCommand)
+	case *CommandCreateTable:
+		return db.createTable(*typedCommand)
+	case *CommandInsert:
+		return db.runInsert(*typedCommand)
+	case *CommandSelect:
+		return db.runSelect(*typedCommand)
+	case *CommandUpdate:
+		return db.runUpdate(*typedCommand)
+	case *CommandDelete:
+		return db.runDelete(*typedCommand)
 	default:
-		return nil, errors.New("unknown command")
+		return nil, fmt.Errorf("unknown command type: %T", typedCommand)
 	}
 }
 
@@ -88,7 +83,11 @@ func (d *Database) createTable(command CommandCreateTable) (*[]table.ColumnSet, 
 	if _, ok := d.tables[command.Name]; ok {
 		return nil, errs.NewErrTableAlreadyExists(command.Name)
 	}
-	d.tables[command.Name] = table.NewTable(command.Schema)
+	createdTable, err := table.NewTable(command.Schema)
+	if err != nil {
+		return nil, err
+	}
+	d.tables[command.Name] = createdTable
 	return &[]table.ColumnSet{0: {"message": fmt.Sprintf("successfully created table %s", command.Name)}}, nil
 }
 
