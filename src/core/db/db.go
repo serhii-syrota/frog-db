@@ -65,6 +65,7 @@ type CommandDropTable struct {
 	Name string
 }
 
+// Drop table from db
 func (d *Database) dropTable(command CommandDropTable) (*[]table.ColumnSet, error) {
 	_, ok := d.tables[command.Name]
 	if !ok {
@@ -79,6 +80,7 @@ type CommandCreateTable struct {
 	Schema schema.T
 }
 
+// Create new table in db
 func (d *Database) createTable(command CommandCreateTable) (*[]table.ColumnSet, error) {
 	if _, ok := d.tables[command.Name]; ok {
 		return nil, errs.NewErrTableAlreadyExists(command.Name)
@@ -96,6 +98,7 @@ type CommandInsert struct {
 	Data *[]table.ColumnSet
 }
 
+// Insert rows to db table
 func (d *Database) runInsert(command CommandInsert) (*[]table.ColumnSet, error) {
 	to, err := d.table(command.To)
 	if err != nil {
@@ -114,6 +117,7 @@ type CommandSelect struct {
 	Conditions table.ColumnSet
 }
 
+// Select rows from db table
 func (d *Database) runSelect(command CommandSelect) (*[]table.ColumnSet, error) {
 	to, err := d.table(command.From)
 	if err != nil {
@@ -132,6 +136,7 @@ type CommandUpdate struct {
 	Data       table.ColumnSet
 }
 
+// Update rows in db table
 func (d *Database) runUpdate(command CommandUpdate) (*[]table.ColumnSet, error) {
 	to, err := d.table(command.TableName)
 	if err != nil {
@@ -149,6 +154,7 @@ type CommandDelete struct {
 	Conditions table.ColumnSet
 }
 
+// Delete rows from db table
 func (d *Database) runDelete(command CommandDelete) (*[]table.ColumnSet, error) {
 	to, err := d.table(command.From)
 	if err != nil {
