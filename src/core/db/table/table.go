@@ -1,6 +1,7 @@
 package table
 
 import (
+	"log"
 	"reflect"
 	"sync"
 
@@ -45,6 +46,12 @@ func (t *T) Dump(tableName string) (*Dump, error) {
 	dump.Schema = t.schema
 	dump.Name = tableName
 	return &dump, nil
+}
+
+func (t *T) LoadDump(data *[]ColumnSet) error {
+	inserted, err := t.InsertRows(data)
+	log.Printf("%v", len(*data) == int(inserted))
+	return err
 }
 
 // Introspect schema

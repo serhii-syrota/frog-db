@@ -102,6 +102,12 @@ func NewRealInv(val any) (*[]float64, error) {
 		}
 		data[0] = typedVal[0]
 		data[1] = typedVal[1]
+	case []any:
+		if len(typedVal) != 2 {
+			return nil, errs.NewErrInvalidRangeDeclaration()
+		}
+		data[0] = typedVal[0]
+		data[1] = typedVal[1]
 	default:
 		return nil, errs.NewErrInvalidRangeDeclaration()
 	}

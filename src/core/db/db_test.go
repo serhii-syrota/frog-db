@@ -1,7 +1,6 @@
 package db
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -221,29 +220,37 @@ func TestExecute(t *testing.T) {
 
 // Test save dump to file and create db from dump.
 func TestDump(t *testing.T) {
-	t.Run("save to file valid json", func(t *testing.T) {
+	t.Run("save and upload", func(t *testing.T) {
+		dumpPath := ".test_dump.json"
+		os.Setenv("DUMP_PATH", dumpPath)
 		database, err := New()
-		// defer os.Remove(".dump_test.json")
+		defer os.Remove(dumpPath)
+
 		assert.NoError(t, err)
 		tables := []string{"frog", "leg"}
 		database.Execute(&CommandCreateTable{Name: tables[0], Schema: schema.T{"leg_length": dbtypes.Real, "jump": dbtypes.RealInv}})
 		database.Execute(&CommandCreateTable{Name: tables[1], Schema: schema.T{"leg_length": dbtypes.Real, "jump": dbtypes.RealInv}})
 
 		rows := &[]table.ColumnSet{{"leg_length": float64(1), "jump": []float64{2.2, 3.3}}}
-		for i := 0; i < 1000; i++ {
+		for i := 0; i < 10; i++ {
 			_, err = database.Execute(&CommandInsert{To: "frog", Data: rows})
 			assert.NoError(t, err)
 		}
-		for i := 0; i < 1000; i++ {
+		for i := 0; i < 10; i++ {
 			_, err = database.Execute(&CommandInsert{To: "leg", Data: rows})
 			assert.NoError(t, err)
 		}
 		err = database.StoreDump()
 		assert.NoError(t, err)
-		dumpF, _ := os.ReadFile(".dump_test.json")
-		var dump Dump
-		err = json.Unmarshal(dumpF, &dump)
+
+		os.Setenv("DUMP_PATH", ".new_dump.json")
+		defer os.Remove(".new_dump.json")
+		newDb, err := New()
 		assert.NoError(t, err)
-		assert.Len(t, dump, len(tables))
+		err = newDb.FromDump(dumpPath)
+		assert.NoError(t, err)
+		selectRes, err := newDb.Execute(&CommandSelect{"frog", &[]string{}, make(table.ColumnSet)})
+		assert.NoError(t, err)
+		assert.Equal(t, 10, len(*selectRes))
 	})
 }

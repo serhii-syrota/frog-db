@@ -22,6 +22,7 @@ type Db interface {
 	IntrospectSchema(name string) (schema.T, error)
 	StoreDump() error
 	JsonDump() <-chan DumpMsg
+	FromDump(dumpPath string) error
 }
 type Database struct {
 	tables map[string]*table.T
@@ -52,6 +53,34 @@ func New() (*Database, error) {
 }
 
 var _ Db = new(Database)
+
+// FromDump implementation.
+func (db *Database) FromDump(dumpPath string) error {
+	dumpRaw, err := os.ReadFile(dumpPath)
+	if err != nil {
+		return err
+	}
+	var dump Dump
+	err = json.Unmarshal(dumpRaw, &dump)
+	if err != nil {
+		return err
+	}
+	// Clean up tables if exists
+	db.tables = make(map[string]*table.T)
+	for _, dumpTable := range dump {
+		if _, err := db.Execute(&CommandCreateTable{dumpTable.Name, dumpTable.Schema}); err != nil {
+			return err
+		}
+		storedTable, err := db.table(dumpTable.Name)
+		if err != nil {
+			return err
+		}
+		if err := storedTable.LoadDump(&dumpTable.Data); err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 // StoreDump implementation.
 func (db *Database) StoreDump() error {

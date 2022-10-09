@@ -77,7 +77,7 @@ type ErrInvalidRangeDeclaration struct {
 }
 
 func NewErrInvalidRangeDeclaration() *ErrInvalidRangeDeclaration {
-	return &ErrInvalidRangeDeclaration{fmt.Errorf("invalid range declaration, should be provided as map with \"from\",\"to\" fields")}
+	return &ErrInvalidRangeDeclaration{fmt.Errorf("invalid range declaration, should be provided as tuple: [\"from\",\"to\"]")}
 }
 
 type ErrDbIO struct {
