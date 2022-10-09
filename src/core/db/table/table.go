@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"sync"
 
+	"github.com/ssyrota/frog-db/src/core/db/deepcopy"
 	"github.com/ssyrota/frog-db/src/core/db/schema"
 	dbtypes "github.com/ssyrota/frog-db/src/core/db/types"
 	errs "github.com/ssyrota/frog-db/src/core/err"
@@ -12,6 +13,7 @@ import (
 
 type ColumnSet map[string]any
 
+// Validate schema and create new table
 func NewTable(sch schema.T) (*T, error) {
 	for column, t := range sch {
 		if !dbtypes.IsAvailableName(string(t)) {
@@ -21,7 +23,6 @@ func NewTable(sch schema.T) (*T, error) {
 	return &T{schema: sch}, nil
 }
 
-// Table with schema, data and crud commands
 type T struct {
 	mu     sync.RWMutex
 	schema schema.T
@@ -77,31 +78,42 @@ func (t *T) DeleteRows(rawCondition ColumnSet) (uint, error) {
 	return uint(len(*ids)), nil
 }
 
-// Select data from table
-func (t *T) SelectRows(rows *[]string, conditions ColumnSet) (*[]ColumnSet, error) {
+// Select data from table,
+// empty columns list and empty conditions considered as "select all"
+func (t *T) SelectRows(columns *[]string, conditions ColumnSet) (*[]ColumnSet, error) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
-	filtered, err := t.filter(conditions)
+	filteredIDs, err := t.filter(conditions)
 	if err != nil {
 		return nil, err
 	}
-	res := make([]ColumnSet, len(*filtered))
-	for _, i := range *filtered {
-		v := t.data[i]
-		// Filter only required fields
-		for columnName := range v {
-			if !slices.Contains(*rows, columnName) {
-				delete(v, columnName)
+	res := make([]ColumnSet, len(*filteredIDs))
+	for i, id := range *filteredIDs {
+		row, err := t.removeExtraFields(t.data[id], columns)
+		if err != nil {
+			return nil, err
+		}
+		res[i] = row
+	}
+	return &res, nil
+}
+func (t *T) removeExtraFields(row ColumnSet, requiredColumns *[]string) (ColumnSet, error) {
+	copied, err := deepcopy.Map(row)
+	if err != nil {
+		return nil, err
+	}
+	if len(*requiredColumns) != 0 {
+		for columnName := range copied {
+			if !slices.Contains(*requiredColumns, columnName) {
+				delete(copied, columnName)
 			}
 		}
-		res = append(res, v)
 	}
-
-	return &res, nil
-
+	return copied, nil
 }
 
-// Get filtered data indexes from table
+// Get filtered data indexes from table.
+// when condition is empty filter returns all data ids from table
 func (t *T) filter(rawCondition ColumnSet) (*[]int, error) {
 	condition, err := t.setFromRaw(rawCondition)
 	if err != nil {
@@ -136,9 +148,9 @@ func (t *T) setFromRaw(raw ColumnSet) (ColumnSet, error) {
 	return condition, nil
 }
 
+// Create list from old copy without unwanted indexes
 func removeIndexes[T any](slice []T, ids []int) []T {
 	result := make([]T, len(slice)-len(ids))
-
 	counter := 0
 	for id, v := range slice {
 		if slices.Contains(ids, id) {

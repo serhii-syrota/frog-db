@@ -99,23 +99,15 @@ type TRealInv struct {
 }
 
 func NewRealInv(val any) (*TRealInv, error) {
-	data, ok := val.(map[string]any)
+	data, ok := val.([]any)
 	if !ok {
 		return nil, errs.NewErrInvalidRangeDeclaration()
 	}
-	a, ok := data["a"]
-	if !ok {
-		return nil, errs.NewErrInvalidRangeDeclaration()
-	}
-	b, ok := data["b"]
-	if !ok {
-		return nil, errs.NewErrInvalidRangeDeclaration()
-	}
-	aVal, err := NewReal(a)
+	aVal, err := NewReal(data[0])
 	if err != nil {
 		return nil, err
 	}
-	bVal, err := NewReal(b)
+	bVal, err := NewReal(data[1])
 	if err != nil {
 		return nil, err
 	}
