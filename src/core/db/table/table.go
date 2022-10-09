@@ -141,7 +141,7 @@ func (t *T) removeExtraFields(row ColumnSet, requiredColumns *[]string) (ColumnS
 	return copied, nil
 }
 
-// Get filtered data indexes from table.
+// Get indexes from data, that matches conditions.
 // when condition is empty filter returns all data ids from table
 func (t *T) filter(rawCondition ColumnSet) (*[]int, error) {
 	condition, err := t.setFromRaw(rawCondition)
@@ -183,7 +183,7 @@ func removeIndexes[T any](slice []T, ids []int) []T {
 	result := make([]T, len(slice)-len(ids))
 	counter := 0
 	for id, v := range slice {
-		if slices.Contains(ids, id) {
+		if !slices.Contains(ids, id) {
 			result[counter] = v
 			counter++
 		}

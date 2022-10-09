@@ -205,4 +205,23 @@ func TestExecute(t *testing.T) {
 			assert.Equal(t, selectResult, &[]table.ColumnSet{{"jump": []float64{10, 11}}})
 		})
 	})
+
+	t.Run("Delete", func(t *testing.T) {
+		t.Run("delete data by valid conditions", func(t *testing.T) {
+			db, _ := New("")
+			db.Execute(&CommandCreateTable{"frog", schema.T{"leg_length": dbtypes.Real, "jump": dbtypes.RealInv}})
+			rows := &[]table.ColumnSet{
+				{"leg_length": float64(1), "jump": []float64{2.2, 3.3}},
+				{"leg_length": float64(2), "jump": []float64{2.5, 3.5}}}
+			db.Execute(&CommandInsert{"frog", rows})
+
+			deleteRes, err := db.Execute(&CommandDelete{"frog", table.ColumnSet{"leg_length": float64(1)}})
+			assert.NoError(t, err)
+			assert.Equal(t, &[]table.ColumnSet{{"message": "successfully deleted 1 row from table frog"}}, deleteRes)
+
+			selectResult, err := db.Execute(&CommandSelect{"frog", &[]string{}, table.ColumnSet{}})
+			assert.NoError(t, err)
+			assert.Equal(t, []table.ColumnSet{{"leg_length": float64(2), "jump": []float64{2.5, 3.5}}}, (*selectResult))
+		})
+	})
 }
