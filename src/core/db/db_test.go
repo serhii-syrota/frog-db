@@ -29,8 +29,7 @@ func TestExecute(t *testing.T) {
 	)
 
 	t.Run("CreateTable with IntrospectSchema", func(t *testing.T) {
-		t.Run(
-			"accepts schema with valid data types and with introspect returns provided schema",
+		t.Run("accepts schema with valid data types and with introspect returns provided schema",
 			func(t *testing.T) {
 				db, err := New("")
 				assert.Nil(t, err)
@@ -43,9 +42,7 @@ func TestExecute(t *testing.T) {
 				assert.Equal(t, introspectionRes, validTableSchema)
 			},
 		)
-
-		t.Run(
-			"fails on create table with duplicate name",
+		t.Run("fails on create table with duplicate name",
 			func(t *testing.T) {
 				db, err := New("")
 				assert.Nil(t, err)
@@ -57,9 +54,7 @@ func TestExecute(t *testing.T) {
 				assert.EqualError(t, err, fmt.Sprintf("table %s already exists", tableName))
 			},
 		)
-
-		t.Run(
-			"fails on invalid dataType in schema provided",
+		t.Run("fails on invalid dataType in schema provided",
 			func(t *testing.T) {
 				db, err := New("")
 				assert.Nil(t, err)
@@ -88,7 +83,6 @@ func TestExecute(t *testing.T) {
 			assert.Nil(t, removedTable)
 			assert.NotNil(t, err)
 		})
-
 		t.Run("fails on drop non existed table", func(t *testing.T) {
 			db, err := New("")
 			assert.Nil(t, err)
@@ -123,7 +117,6 @@ func TestExecute(t *testing.T) {
 			assert.NotNil(t, err)
 			assert.IsType(t, &errs.ErrColumnsRequired{}, err)
 		})
-
 		t.Run("fail input with unexpected columns", func(t *testing.T) {
 			db, _ := New("")
 			db.Execute(&CommandCreateTable{"frog", schema.T{"leg_length": dbtypes.Real, "jump": dbtypes.RealInv}})
@@ -133,7 +126,6 @@ func TestExecute(t *testing.T) {
 			assert.NotNil(t, err)
 			assert.IsType(t, &errs.ErrColumnsNotFound{}, err)
 		})
-
 		t.Run("fail input with columns type mismatch", func(t *testing.T) {
 			db, _ := New("")
 			db.Execute(&CommandCreateTable{"frog", schema.T{"leg_length": dbtypes.Real, "jump": dbtypes.RealInv}})
@@ -146,7 +138,7 @@ func TestExecute(t *testing.T) {
 	})
 
 	t.Run("Select", func(t *testing.T) {
-		t.Run("accepts valid conditions and fields and return data, that complains its", func(t *testing.T) {
+		t.Run("accepts valid conditions and fields and return data, that matches conditions", func(t *testing.T) {
 			db, _ := New("")
 			db.Execute(&CommandCreateTable{"frog", schema.T{"leg_length": dbtypes.Real, "jump": dbtypes.RealInv}})
 			rows := &[]table.ColumnSet{
@@ -158,7 +150,6 @@ func TestExecute(t *testing.T) {
 			assert.NotNil(t, selectResult)
 			assert.Equal(t, selectResult, &[]table.ColumnSet{{"jump": []float64{2.2, 3.3}}})
 		})
-
 		t.Run("is idempotent", func(t *testing.T) {
 			db, _ := New("")
 			db.Execute(&CommandCreateTable{"frog", schema.T{"leg_length": dbtypes.Real, "jump": dbtypes.RealInv}})
@@ -186,7 +177,7 @@ func TestExecute(t *testing.T) {
 			_, err := db.Execute(&CommandUpdate{"frog", table.ColumnSet{"leg_length": 1}, updateFields})
 			assert.NotNil(t, err)
 		})
-		t.Run("accepts valid conditions and update data and updates table rows", func(t *testing.T) {
+		t.Run("accepts valid conditions and updates table rows", func(t *testing.T) {
 			db, _ := New("")
 			tableName := "frog"
 			db.Execute(&CommandCreateTable{tableName, schema.T{"leg_length": dbtypes.Real, "jump": dbtypes.RealInv}})
