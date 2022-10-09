@@ -1,8 +1,10 @@
 package db
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/ssyrota/frog-db/src/core/db/schema"
@@ -21,7 +23,7 @@ func TestExecute(t *testing.T) {
 	t.Run("fails on unknown command type", func(t *testing.T) {
 		db, err := New("")
 		assert.Nil(t, err)
-		assert.NotNil(t, db)
+		assert.NoError(t, err, "")
 		_, err = db.Execute("unknown smooth command")
 		assert.NotNil(t, err)
 		assert.EqualError(t, err, fmt.Sprintf("unknown command type: %T", "unknown smooth command"))
@@ -214,5 +216,34 @@ func TestExecute(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, []table.ColumnSet{{"leg_length": float64(2), "jump": []float64{2.5, 3.5}}}, (*selectResult))
 		})
+	})
+}
+
+// Test save dump to file and create db from dump.
+func TestDump(t *testing.T) {
+	t.Run("save to file valid json", func(t *testing.T) {
+		database, err := New(".dump_test.json")
+		// defer os.Remove(".dump_test.json")
+		assert.NoError(t, err)
+		tables := []string{"frog", "leg"}
+		database.Execute(&CommandCreateTable{Name: tables[0], Schema: schema.T{"leg_length": dbtypes.Real, "jump": dbtypes.RealInv}})
+		database.Execute(&CommandCreateTable{Name: tables[1], Schema: schema.T{"leg_length": dbtypes.Real, "jump": dbtypes.RealInv}})
+
+		rows := &[]table.ColumnSet{{"leg_length": float64(1), "jump": []float64{2.2, 3.3}}}
+		for i := 0; i < 1000; i++ {
+			_, err = database.Execute(&CommandInsert{To: "frog", Data: rows})
+			assert.NoError(t, err)
+		}
+		for i := 0; i < 1000; i++ {
+			_, err = database.Execute(&CommandInsert{To: "leg", Data: rows})
+			assert.NoError(t, err)
+		}
+		err = database.StoreDump()
+		assert.NoError(t, err)
+		dumpF, _ := os.ReadFile(".dump_test.json")
+		var dump Dump
+		err = json.Unmarshal(dumpF, &dump)
+		assert.NoError(t, err)
+		assert.Len(t, dump, len(tables))
 	})
 }

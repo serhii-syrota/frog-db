@@ -30,6 +30,23 @@ type T struct {
 	data   []ColumnSet
 }
 
+// Dump table.
+type Dump struct {
+	Schema schema.T    `json:"schema"`
+	Data   []ColumnSet `json:"data"`
+	Name   string      `json:"name"`
+}
+
+func (t *T) Dump(tableName string) (*Dump, error) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	var dump Dump
+	dump.Data = t.data
+	dump.Schema = t.schema
+	dump.Name = tableName
+	return &dump, nil
+}
+
 // Introspect schema
 func (t *T) Schema() schema.T {
 	t.mu.RLock()
@@ -42,9 +59,9 @@ func (t *T) InsertRows(rows *[]ColumnSet) (uint, error) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	rowsToInsert := make([]ColumnSet, len(*rows))
-	requiredColumns := mapKeys(t.schema)
+	requiredColumns := MapKeys(t.schema)
 	for i, row := range *rows {
-		rowColumns := mapKeys(row)
+		rowColumns := MapKeys(row)
 		// Check required columns
 		omitted := pie.Filter(requiredColumns, func(a string) bool {
 			return !slices.Contains(rowColumns, a)
@@ -191,7 +208,7 @@ func removeIndexes[T any](slice []T, ids []int) []T {
 	return result
 }
 
-func mapKeys[T any](input map[string]T) []string {
+func MapKeys[T any](input map[string]T) []string {
 	result := make([]string, 0, len(input))
 	for k := range input {
 		result = append(result, k)

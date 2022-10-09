@@ -1,7 +1,10 @@
 package db
 
 import (
+	"bufio"
+	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/dustin/go-humanize/english"
 	"github.com/ssyrota/frog-db/src/core/db/schema"
@@ -10,10 +13,12 @@ import (
 	errs "github.com/ssyrota/frog-db/src/core/err"
 )
 
+type Dump []table.Dump
 type Db interface {
 	Execute(command any) (*[]table.ColumnSet, error)
 	IntrospectSchema(name string) (schema.T, error)
 	StoreDump() error
+	JsonDump() <-chan DumpMsg
 	// ExportData()
 	// ImportData()
 }
@@ -23,6 +28,13 @@ type Database struct {
 }
 
 func New(path string) (*Database, error) {
+	if path == "" {
+		path = "./.dump.json"
+	}
+	_, err := os.Create(path)
+	if err != nil {
+		return nil, err
+	}
 	return &Database{tables: make(map[string]*table.T), path: path}, nil
 }
 
@@ -30,7 +42,60 @@ var _ Db = new(Database)
 
 // StoreDump implementation.
 func (db *Database) StoreDump() error {
+	file, err := os.OpenFile(db.path, os.O_RDWR, 0644)
+	defer file.Close()
+	if err != nil {
+		return err
+	}
+	writer := bufio.NewWriter(file)
+	dumpCh := db.JsonDump()
+	for value := range dumpCh {
+		if value.Err != nil {
+			return err
+		}
+		_, err := writer.Write(value.Payload)
+		if err != nil {
+			return err
+		}
+		writer.Flush()
+	}
 	return nil
+}
+
+type DumpMsg struct {
+	Payload []byte
+	Err     error
+}
+
+// JsonDump implementation.
+func (db *Database) JsonDump() <-chan DumpMsg {
+	ch := make(chan DumpMsg)
+	go func() {
+		ch <- DumpMsg{[]byte("["), nil}
+		tableNames := table.MapKeys(db.tables)
+		for i, tableName := range tableNames {
+			dump, err := db.tables[tableName].Dump(tableName)
+			if err != nil {
+				ch <- DumpMsg{nil, err}
+				close(ch)
+				return
+			}
+			bytes, err := json.Marshal(dump)
+			if err != nil {
+				ch <- DumpMsg{nil, err}
+				close(ch)
+				return
+			}
+			ch <- DumpMsg{bytes, nil}
+			if i != len(tableNames)-1 {
+				ch <- DumpMsg{[]byte(","), nil}
+			}
+		}
+
+		ch <- DumpMsg{[]byte("]"), nil}
+		close(ch)
+	}()
+	return ch
 }
 
 // IntrospectSchema implementation.

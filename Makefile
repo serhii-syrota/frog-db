@@ -20,5 +20,5 @@ test:
 .PHONY: test
 
 watch-tests:
-	@watch -n 0.1 make test
+	@watch -n 2 make test
 .PHONY: watch-tests
