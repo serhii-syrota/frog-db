@@ -2,7 +2,7 @@
 
 <img align="right" width="125" height="125" src="./img/logo.svg">
 
-_A database engine as small as a frog_
+_A small database engine_
 
 > **disclaimer**: this is a university project. Please don't jump to any conclusions when you see
 > poorly designed, poorly tested, feature-deprived, undocumented and/or buggy modules.
@@ -27,7 +27,7 @@ _A database engine as small as a frog_
 
 You can read about each module in the docs:
 
-- [Architechture](./docs/architecture.md)
+- [Architecture](./docs/architecture.md)
 - [Testing](./docs/testing.md)
 
 ## Credits
