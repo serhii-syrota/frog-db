@@ -15,11 +15,13 @@ _A database engine as small as a frog_
 ## Features
 
 - :floppy_disk: Basic CRUD operations
+- :fireworks: Store pictures
 - :gear: Filtering based on column values
 - :hammer_and_wrench: Creating and dropping tables
 - :umbrella: Remove duplicates in tables
+- :cd: Dump!
 - :computer: Cross-platform!
-- :zap: Blazingly fast!
+- :zap: Fast!
 
 ## Details
 
