@@ -98,19 +98,19 @@ func TestExecute(t *testing.T) {
 		})
 	})
 
-	t.Run("Insert\\Select one row", func(t *testing.T) {
+	t.Run("Insert row", func(t *testing.T) {
 		db, _ := New("")
 		db.Execute(&CommandCreateTable{"frog", schema.T{"leg_length": dbtypes.Real, "jump": dbtypes.RealInv}})
 		rows := &[]table.ColumnSet{{"leg_length": []float64{2.2, 3.3}}}
 		insertResult, err := db.Execute(&CommandInsert{"frog", rows})
 		assert.Nil(t, err)
 		assert.NotNil(t, insertResult)
-		assert.Equal(t, fmt.Sprintf("successfully inserted %d rows to table frog", len(*rows)), (*insertResult)[0]["message"])
+		assert.Equal(t, fmt.Sprintf("successfully inserted %d row to table frog", len(*rows)), (*insertResult)[0]["message"])
 
 		selectResult, err := db.Execute(&CommandSelect{"frog", &[]string{}, table.ColumnSet{}})
 		assert.Nil(t, err)
 		assert.NotNil(t, selectResult)
 		assert.Equal(t, []table.ColumnSet{{"leg_length": []float64{2.2, 3.3}}}, (*selectResult))
-
 	})
+
 }

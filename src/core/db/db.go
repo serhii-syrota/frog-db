@@ -3,6 +3,7 @@ package db
 import (
 	"fmt"
 
+	"github.com/dustin/go-humanize/english"
 	"github.com/ssyrota/frog-db/src/core/db/schema"
 	"github.com/ssyrota/frog-db/src/core/db/table"
 	dbtypes "github.com/ssyrota/frog-db/src/core/db/types"
@@ -108,7 +109,12 @@ func (d *Database) runInsert(command CommandInsert) (*[]table.ColumnSet, error) 
 	if err != nil {
 		return nil, err
 	}
-	return &[]table.ColumnSet{0: {"message": fmt.Sprintf("successfully inserted %d rows to table %s", inserted, command.To)}}, nil
+	return &[]table.ColumnSet{0: {
+			"message": fmt.Sprintf("successfully inserted %d %s to table %s",
+				inserted,
+				english.PluralWord(int(inserted), "row", ""),
+				command.To)}},
+		nil
 }
 
 type CommandSelect struct {
@@ -146,7 +152,10 @@ func (d *Database) runUpdate(command CommandUpdate) (*[]table.ColumnSet, error) 
 	if err != nil {
 		return nil, err
 	}
-	return &[]table.ColumnSet{0: {"message": fmt.Sprintf("successfully updated %d rows in table %s", rowsCount, command.TableName)}}, nil
+	return &[]table.ColumnSet{0: {"message": fmt.Sprintf("successfully updated %d %s in table %s",
+		rowsCount,
+		english.PluralWord(int(rowsCount), "row", ""),
+		command.TableName)}}, nil
 }
 
 type CommandDelete struct {
@@ -164,7 +173,10 @@ func (d *Database) runDelete(command CommandDelete) (*[]table.ColumnSet, error) 
 	if err != nil {
 		return nil, err
 	}
-	return &[]table.ColumnSet{0: {"message": fmt.Sprintf("successfully deleted %d rows from table %s", rowsCount, command.From)}}, nil
+	return &[]table.ColumnSet{0: {"message": fmt.Sprintf("successfully deleted %d %s from table %s",
+		rowsCount,
+		english.PluralWord(int(rowsCount), "row", ""),
+		command.From)}}, nil
 }
 
 func (d *Database) table(name string) (*table.T, error) {
