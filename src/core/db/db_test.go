@@ -172,4 +172,37 @@ func TestExecute(t *testing.T) {
 			}
 		})
 	})
+
+	t.Run("Update", func(t *testing.T) {
+		t.Run("fail on invalid update data", func(t *testing.T) {
+			db, _ := New("")
+			db.Execute(&CommandCreateTable{"frog", schema.T{"leg_length": dbtypes.Real, "jump": dbtypes.RealInv}})
+			rows := &[]table.ColumnSet{
+				{"leg_length": float64(1), "jump": []float64{2.2, 3.3}},
+				{"leg_length": float64(2), "jump": []float64{2.5, 3.5}}}
+			db.Execute(&CommandInsert{"frog", rows})
+
+			updateFields := table.ColumnSet{"jump": []float64{10, 9}}
+			_, err := db.Execute(&CommandUpdate{"frog", table.ColumnSet{"leg_length": 1}, updateFields})
+			assert.NotNil(t, err)
+		})
+		t.Run("accepts valid conditions and update data and updates table rows", func(t *testing.T) {
+			db, _ := New("")
+			tableName := "frog"
+			db.Execute(&CommandCreateTable{tableName, schema.T{"leg_length": dbtypes.Real, "jump": dbtypes.RealInv}})
+			rows := &[]table.ColumnSet{
+				{"leg_length": float64(1), "jump": []float64{2.2, 3.3}},
+				{"leg_length": float64(2), "jump": []float64{2.5, 3.5}}}
+			db.Execute(&CommandInsert{tableName, rows})
+
+			updateConditions := table.ColumnSet{"leg_length": 1}
+			updateFields := table.ColumnSet{"jump": []float64{10, 11}}
+			updateResult, err := db.Execute(&CommandUpdate{tableName, updateConditions, updateFields})
+			assert.Nil(t, err)
+			assert.NotNil(t, updateResult)
+			assert.Equal(t, &[]table.ColumnSet{{"message": "successfully updated 1 row in table frog"}}, updateResult)
+			selectResult, _ := db.Execute(&CommandSelect{tableName, &[]string{"jump"}, updateConditions})
+			assert.Equal(t, selectResult, &[]table.ColumnSet{{"jump": []float64{10, 11}}})
+		})
+	})
 }
