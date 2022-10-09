@@ -3,6 +3,7 @@ package dbtypes
 
 import (
 	"fmt"
+	"net/url"
 	"reflect"
 
 	"github.com/spf13/cast"
@@ -35,7 +36,7 @@ func NewDataVal(dataType Type, val any) (any, error) {
 	case RealInv:
 		return NewRealInv(val)
 	case Image:
-		return nil, fmt.Errorf("%s is not implemented", dataType)
+		return NewImage(val)
 	default:
 		return nil, fmt.Errorf("%s is invalid data type", dataType)
 	}
@@ -87,6 +88,18 @@ func NewChar(v any) (*rune, error) {
 
 func NewString(v any) (*string, error) {
 	res, err := cast.ToStringE(v)
+	if err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func NewImage(v any) (*string, error) {
+	res, err := cast.ToStringE(v)
+	if err != nil {
+		return nil, err
+	}
+	_, err = url.Parse(res)
 	if err != nil {
 		return nil, err
 	}
