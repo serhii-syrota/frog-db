@@ -56,6 +56,11 @@ var _ Db = new(Database)
 
 // FromDump implementation.
 func (db *Database) FromDump(dumpPath string) error {
+	// Save dump before delete data
+	err := db.StoreDump()
+	if err != nil {
+		return err
+	}
 	dumpRaw, err := os.ReadFile(dumpPath)
 	if err != nil {
 		return err
