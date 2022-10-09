@@ -146,6 +146,30 @@ func TestExecute(t *testing.T) {
 	})
 
 	t.Run("Select", func(t *testing.T) {
-	})
+		t.Run("accepts valid conditions and fields and return data, that complains its", func(t *testing.T) {
+			db, _ := New("")
+			db.Execute(&CommandCreateTable{"frog", schema.T{"leg_length": dbtypes.Real, "jump": dbtypes.RealInv}})
+			rows := &[]table.ColumnSet{
+				{"leg_length": float64(1), "jump": []float64{2.2, 3.3}},
+				{"leg_length": float64(2), "jump": []float64{2.5, 3.5}}}
+			db.Execute(&CommandInsert{"frog", rows})
+			selectResult, err := db.Execute(&CommandSelect{"frog", &[]string{"jump"}, table.ColumnSet{"leg_length": 1}})
+			assert.Nil(t, err)
+			assert.NotNil(t, selectResult)
+			assert.Equal(t, selectResult, &[]table.ColumnSet{{"jump": []float64{2.2, 3.3}}})
+		})
 
+		t.Run("is idempotent", func(t *testing.T) {
+			db, _ := New("")
+			db.Execute(&CommandCreateTable{"frog", schema.T{"leg_length": dbtypes.Real, "jump": dbtypes.RealInv}})
+			rows := &[]table.ColumnSet{
+				{"leg_length": float64(1), "jump": []float64{2.2, 3.3}},
+				{"leg_length": float64(2), "jump": []float64{2.5, 3.5}}}
+			db.Execute(&CommandInsert{"frog", rows})
+			for i := 0; i < 1000; i++ {
+				selectResult, _ := db.Execute(&CommandSelect{"frog", &[]string{"jump"}, table.ColumnSet{"leg_length": 1}})
+				assert.Equal(t, selectResult, &[]table.ColumnSet{{"jump": []float64{2.2, 3.3}}})
+			}
+		})
+	})
 }
