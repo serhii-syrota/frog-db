@@ -15,7 +15,8 @@ pre-release:
 # Run tests
 test: 
 	@echo "==> Running tests"
-	@go test -cover ./...
+	@go test -cover ./... | grep -e "^[^?].*"
+	@cat test_report.txt
 	@echo "==> Complete"
 .PHONY: test
 

@@ -11,3 +11,24 @@ _A database engine as small as a frog_
 ## About
 
 `frog-db` is a DIY table-oriented (not relational) database engine with a modular design.
+
+## Features
+
+- :floppy_disk: Basic CRUD operations
+- :gear: Filtering based on column values
+- :hammer_and_wrench: Creating and dropping tables
+- :umbrella: Remove duplicates in tables
+- :computer: Cross-platform!
+- :zap: Blazingly fast!
+
+## Details
+
+You can read about each module in the docs:
+
+- [Architechture](./docs/architecture.md)
+- [Testing](./docs/testing.md)
+
+## Credits
+
+- Logo created by [Victoruler](https://thenounproject.com/victorulerz/) from The Noun Project
+- Everything else in this repo - by yours truly
