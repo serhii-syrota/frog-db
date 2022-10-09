@@ -169,19 +169,6 @@ func (db *Database) Execute(command any) (*[]table.ColumnSet, error) {
 		return db.runUpdate(*typedCommand)
 	case *CommandDelete:
 		return db.runDelete(*typedCommand)
-	// Recognize not-pointer values for more flexibility
-	case CommandDropTable:
-		return db.dropTable(typedCommand)
-	case CommandCreateTable:
-		return db.createTable(typedCommand)
-	case CommandInsert:
-		return db.runInsert(typedCommand)
-	case CommandSelect:
-		return db.runSelect(typedCommand)
-	case CommandUpdate:
-		return db.runUpdate(typedCommand)
-	case CommandDelete:
-		return db.runDelete(typedCommand)
 	default:
 		return nil, fmt.Errorf("unknown command type: %T", typedCommand)
 	}
