@@ -23,7 +23,7 @@ _A small database engine_
 - :computer: Cross-platform!
 - :zap: Fast!
 
-## Details
+## Docs
 
 You can read about each module in the docs:
 
