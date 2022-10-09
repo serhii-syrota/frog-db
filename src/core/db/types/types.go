@@ -93,14 +93,16 @@ func NewString(v any) (*string, error) {
 	return &res, nil
 }
 
-type TRealInv struct {
-	A float64
-	B float64
-}
-
-func NewRealInv(val any) (*TRealInv, error) {
-	data, ok := val.([]any)
-	if !ok {
+func NewRealInv(val any) (*[]float64, error) {
+	data := make([]any, 2)
+	switch typedVal := val.(type) {
+	case []float64:
+		if len(typedVal) != 2 {
+			return nil, errs.NewErrInvalidRangeDeclaration()
+		}
+		data[0] = typedVal[0]
+		data[1] = typedVal[1]
+	default:
 		return nil, errs.NewErrInvalidRangeDeclaration()
 	}
 	aVal, err := NewReal(data[0])
@@ -114,6 +116,5 @@ func NewRealInv(val any) (*TRealInv, error) {
 	if *aVal > *bVal {
 		return nil, errs.NewErrInvalidRange(*aVal, *bVal)
 	}
-
-	return &TRealInv{*aVal, *bVal}, nil
+	return &[]float64{*aVal, *bVal}, nil
 }

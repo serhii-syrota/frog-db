@@ -1,12 +1,14 @@
 package db
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/ssyrota/frog-db/src/core/db/schema"
 	"github.com/ssyrota/frog-db/src/core/db/table"
 	dbtypes "github.com/ssyrota/frog-db/src/core/db/types"
+	errs "github.com/ssyrota/frog-db/src/core/err"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -98,19 +100,52 @@ func TestExecute(t *testing.T) {
 		})
 	})
 
-	t.Run("Insert row", func(t *testing.T) {
-		db, _ := New("")
-		db.Execute(&CommandCreateTable{"frog", schema.T{"leg_length": dbtypes.Real, "jump": dbtypes.RealInv}})
-		rows := &[]table.ColumnSet{{"leg_length": []float64{2.2, 3.3}}}
-		insertResult, err := db.Execute(&CommandInsert{"frog", rows})
-		assert.Nil(t, err)
-		assert.NotNil(t, insertResult)
-		assert.Equal(t, fmt.Sprintf("successfully inserted %d row to table frog", len(*rows)), (*insertResult)[0]["message"])
+	t.Run("Insert", func(t *testing.T) {
+		t.Run("accepts and save input with required columns and valid types", func(t *testing.T) {
+			db, _ := New("")
+			db.Execute(&CommandCreateTable{"frog", schema.T{"leg_length": dbtypes.Real, "jump": dbtypes.RealInv}})
+			rows := &[]table.ColumnSet{
+				{"leg_length": float64(1), "jump": []float64{2.2, 3.3}},
+				{"leg_length": float64(2), "jump": []float64{2.5, 3.5}}}
+			insertResult, err := db.Execute(&CommandInsert{"frog", rows})
+			assert.Nil(t, err)
+			assert.Equal(t, fmt.Sprintf("successfully inserted %d rows to table frog", len(*rows)), (*insertResult)[0]["message"])
 
-		selectResult, err := db.Execute(&CommandSelect{"frog", &[]string{}, table.ColumnSet{}})
-		assert.Nil(t, err)
-		assert.NotNil(t, selectResult)
-		assert.Equal(t, []table.ColumnSet{{"leg_length": []float64{2.2, 3.3}}}, (*selectResult))
+			selectResult, err := db.Execute(&CommandSelect{"frog", &[]string{}, table.ColumnSet{}})
+			assert.Nil(t, err)
+			assert.Equal(t, *rows, (*selectResult))
+		})
+		t.Run("fail input without required columns", func(t *testing.T) {
+			db, _ := New("")
+			db.Execute(&CommandCreateTable{"frog", schema.T{"leg_length": dbtypes.Real, "jump": dbtypes.RealInv}})
+			rows := &[]table.ColumnSet{{"leg_length": 1}}
+			_, err := db.Execute(&CommandInsert{"frog", rows})
+			assert.NotNil(t, err)
+			assert.IsType(t, &errs.ErrColumnsRequired{}, err)
+		})
+
+		t.Run("fail input with unexpected columns", func(t *testing.T) {
+			db, _ := New("")
+			db.Execute(&CommandCreateTable{"frog", schema.T{"leg_length": dbtypes.Real, "jump": dbtypes.RealInv}})
+			rows := &[]table.ColumnSet{
+				{"unknown": 1, "leg_length": 2, "jump": []float64{2.5, 3.5}}}
+			_, err := db.Execute(&CommandInsert{"frog", rows})
+			assert.NotNil(t, err)
+			assert.IsType(t, &errs.ErrColumnsNotFound{}, err)
+		})
+
+		t.Run("fail input with columns type mismatch", func(t *testing.T) {
+			db, _ := New("")
+			db.Execute(&CommandCreateTable{"frog", schema.T{"leg_length": dbtypes.Real, "jump": dbtypes.RealInv}})
+			rows := &[]table.ColumnSet{
+				{"leg_length": "short", "jump": []float64{2.5, 3.5}}}
+			_, err := db.Execute(&CommandInsert{"frog", rows})
+			assert.NotNil(t, err)
+			assert.IsType(t, errors.New(""), err)
+		})
+	})
+
+	t.Run("Select", func(t *testing.T) {
 	})
 
 }

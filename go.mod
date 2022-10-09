@@ -7,6 +7,7 @@ require golang.org/x/exp v0.0.0-20221006183845-316c7553db56
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
+	github.com/elliotchance/pie/v2 v2.0.1 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/spf13/cast v1.5.0 // indirect

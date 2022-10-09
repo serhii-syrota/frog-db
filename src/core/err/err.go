@@ -1,7 +1,12 @@
 // Package errs provides errors, that may occur on db usage
 package errs
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+
+	"github.com/dustin/go-humanize/english"
+)
 
 type ErrTableAlreadyExists struct {
 	error
@@ -19,12 +24,28 @@ func NewErrTableNotFound(tableName string) *ErrTableNotFound {
 	return &ErrTableNotFound{fmt.Errorf("table %s not found", tableName)}
 }
 
-type ErrColumnNotFound struct {
+type ErrColumnsRequired struct {
 	error
 }
 
-func NewErrColumnNotFound(columnName string) *ErrColumnNotFound {
-	return &ErrColumnNotFound{fmt.Errorf("column %s not found", columnName)}
+func NewErrColumnsRequired(columnNames []string) *ErrColumnsRequired {
+	return &ErrColumnsRequired{
+		fmt.Errorf("%s %s required",
+			english.PluralWord(len(columnNames), "column", ""),
+			strings.Join(columnNames, ", ")),
+	}
+}
+
+type ErrColumnsNotFound struct {
+	error
+}
+
+func NewErrColumnsNotFound(columnNames []string) *ErrColumnsNotFound {
+	return &ErrColumnsNotFound{
+		fmt.Errorf("%s %s not found",
+			english.PluralWord(len(columnNames), "column", ""),
+			strings.Join(columnNames, ", ")),
+	}
 }
 
 type ErrNoColumns struct {

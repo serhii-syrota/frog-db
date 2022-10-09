@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"sync"
 
+	"github.com/elliotchance/pie/v2"
 	"github.com/ssyrota/frog-db/src/core/db/deepcopy"
 	"github.com/ssyrota/frog-db/src/core/db/schema"
 	dbtypes "github.com/ssyrota/frog-db/src/core/db/types"
@@ -40,8 +41,37 @@ func (t *T) Schema() schema.T {
 func (t *T) InsertRows(rows *[]ColumnSet) (uint, error) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
-	t.data = append(t.data, *rows...)
-	return uint(len(*rows)), nil
+	rowsToInsert := make([]ColumnSet, len(*rows))
+	requiredColumns := mapKeys(t.schema)
+	for i, row := range *rows {
+		rowColumns := mapKeys(row)
+		// Check required columns
+		omitted := pie.Filter(requiredColumns, func(a string) bool {
+			return !slices.Contains(rowColumns, a)
+		})
+		if len(omitted) != 0 {
+			return 0, errs.NewErrColumnsRequired(omitted)
+		}
+		// Check extra columns
+		extra := pie.Filter(rowColumns, func(a string) bool {
+			return !slices.Contains(requiredColumns, a)
+		})
+		if len(extra) != 0 {
+			return 0, errs.NewErrColumnsNotFound(extra)
+		}
+		// Validate types
+		rowToInsert := make(ColumnSet)
+		for k, v := range row {
+			typedVal, err := dbtypes.NewDataVal(t.schema[k], v)
+			if err != nil {
+				return 0, err
+			}
+			rowToInsert[k] = typedVal
+		}
+		rowsToInsert[i] = rowToInsert
+	}
+	t.data = append(t.data, rowsToInsert...)
+	return uint(len(rowsToInsert)), nil
 }
 
 // Update rows in table
@@ -61,7 +91,6 @@ func (t *T) UpdateRows(rawCondition ColumnSet, newRawData ColumnSet) (uint, erro
 		for column, updatedValue := range newData {
 			rawToUpdate[column] = updatedValue
 		}
-
 	}
 	return uint(len(*ids)), nil
 }
@@ -132,20 +161,21 @@ rows:
 	return &res, nil
 }
 
+// Convert raw map to typed ColumnSet
 func (t *T) setFromRaw(raw ColumnSet) (ColumnSet, error) {
-	condition := make(ColumnSet, len(raw))
+	typedSet := make(ColumnSet, len(raw))
 	for k, v := range raw {
 		dataType, ok := t.schema[k]
 		if !ok {
-			return nil, errs.NewErrColumnNotFound(k)
+			return nil, errs.NewErrColumnsNotFound([]string{k})
 		}
 		val, err := dbtypes.NewDataVal(dataType, v)
 		if err != nil {
 			return nil, err
 		}
-		condition[k] = val
+		typedSet[k] = val
 	}
-	return condition, nil
+	return typedSet, nil
 }
 
 // Create list from old copy without unwanted indexes
@@ -159,4 +189,13 @@ func removeIndexes[T any](slice []T, ids []int) []T {
 		}
 	}
 	return result
+}
+
+func mapKeys[T any](input map[string]T) []string {
+	result := make([]string, 0, len(input))
+	for k := range input {
+		result = append(result, k)
+	}
+	return result
+
 }
