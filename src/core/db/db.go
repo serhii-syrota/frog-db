@@ -4,8 +4,11 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
+	"time"
 
+	"github.com/caarlos0/env/v6"
 	"github.com/dustin/go-humanize/english"
 	"github.com/ssyrota/frog-db/src/core/db/schema"
 	"github.com/ssyrota/frog-db/src/core/db/table"
@@ -19,23 +22,33 @@ type Db interface {
 	IntrospectSchema(name string) (schema.T, error)
 	StoreDump() error
 	JsonDump() <-chan DumpMsg
-	// ExportData()
-	// ImportData()
 }
 type Database struct {
 	tables map[string]*table.T
 	path   string
 }
 
-func New(path string) (*Database, error) {
-	if path == "" {
-		path = "./.dump.json"
+func New() (*Database, error) {
+	cfg := config{}
+	if err := env.Parse(&cfg); err != nil {
+		return nil, err
 	}
-	_, err := os.Create(path)
+	_, err := os.Create(cfg.Path)
 	if err != nil {
 		return nil, err
 	}
-	return &Database{tables: make(map[string]*table.T), path: path}, nil
+	db := &Database{tables: make(map[string]*table.T), path: cfg.Path}
+	// Run store dump interval job
+	go func() {
+		ticker := time.NewTicker(cfg.DumpInterval)
+		for range ticker.C {
+			err := db.StoreDump()
+			if err != nil {
+				log.Printf("error: %s", err.Error())
+			}
+		}
+	}()
+	return db, nil
 }
 
 var _ Db = new(Database)
