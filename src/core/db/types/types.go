@@ -23,6 +23,7 @@ func IsAvailableName(val string) bool {
 	return false
 }
 
+// Parse and return pointer to parsed value
 func NewDataVal(dataType Type, val any) (any, error) {
 	switch dataType {
 	case Integer:
@@ -51,29 +52,29 @@ const (
 	Image   Type = "image"
 )
 
-func NewInteger(v any) (*int64, error) {
+func NewInteger(v any) (int64, error) {
 	res, err := cast.ToInt64E(v)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
-	return &res, nil
+	return res, nil
 }
 
-func NewReal(v any) (*float64, error) {
+func NewReal(v any) (float64, error) {
 	res, err := cast.ToFloat64E(v)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
-	return &res, nil
+	return res, nil
 }
 
-func NewChar(v any) (*rune, error) {
+func NewChar(v any) (rune, error) {
 	var val rune
 	value := reflect.ValueOf(v)
 	switch value.Kind() {
 	case reflect.String:
 		if len(value.String()) != 1 {
-			return nil, fmt.Errorf("%s must contain exact 1 symbol", v)
+			return 0, fmt.Errorf("%s must contain exact 1 symbol", v)
 		}
 		for _, runeValue := range value.String() {
 			val = runeValue
@@ -81,32 +82,32 @@ func NewChar(v any) (*rune, error) {
 	case reflect.Int32:
 		val = rune(value.Int())
 	default:
-		return nil, fmt.Errorf("unknown type provided for rune, %T", v)
+		return 0, fmt.Errorf("unknown type provided for rune, %T", v)
 	}
-	return &val, nil
+	return val, nil
 }
 
-func NewString(v any) (*string, error) {
+func NewString(v any) (string, error) {
 	res, err := cast.ToStringE(v)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return &res, nil
+	return res, nil
 }
 
-func NewImage(v any) (*string, error) {
+func NewImage(v any) (string, error) {
 	res, err := cast.ToStringE(v)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	_, err = url.Parse(res)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return &res, nil
+	return res, nil
 }
 
-func NewRealInv(val any) (*[]float64, error) {
+func NewRealInv(val any) ([]float64, error) {
 	data := make([]any, 2)
 	switch typedVal := val.(type) {
 	case []float64:
@@ -132,8 +133,8 @@ func NewRealInv(val any) (*[]float64, error) {
 	if err != nil {
 		return nil, err
 	}
-	if *aVal > *bVal {
-		return nil, errs.NewErrInvalidRange(*aVal, *bVal)
+	if aVal > bVal {
+		return nil, errs.NewErrInvalidRange(aVal, bVal)
 	}
-	return &[]float64{*aVal, *bVal}, nil
+	return []float64{aVal, bVal}, nil
 }

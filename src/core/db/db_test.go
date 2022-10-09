@@ -14,6 +14,10 @@ import (
 )
 
 func TestExecute(t *testing.T) {
+	dumpPath := ".test.json"
+	os.Setenv("DUMP_PATH", dumpPath)
+	defer os.Remove(dumpPath)
+
 	validTableSchema := schema.T{"leg_length": dbtypes.Real, "jump": dbtypes.RealInv}
 	tableName := "frog"
 	validCreateCommand := &CommandCreateTable{tableName, validTableSchema}
@@ -215,6 +219,19 @@ func TestExecute(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, []table.ColumnSet{{"leg_length": float64(2), "jump": []float64{2.5, 3.5}}}, (*selectResult))
 		})
+	})
+
+	t.Run("RemoveDuplicates", func(t *testing.T) {
+		db, _ := New()
+		db.Execute(&CommandCreateTable{"frog", schema.T{"leg_length": dbtypes.Real, "jump": dbtypes.RealInv}})
+		rows := &[]table.ColumnSet{
+			{"leg_length": float64(1), "jump": []float64{2.2, 3.3}},
+			{"leg_length": float64(1), "jump": []float64{2.2, 3.3}},
+			{"leg_length": float64(1), "jump": []float64{2.5, 3.5}}}
+		db.Execute(&CommandInsert{"frog", rows})
+		deleteRes, err := db.Execute(&CommandRemoveDuplicates{"frog"})
+		assert.NoError(t, err)
+		assert.Equal(t, &[]table.ColumnSet{{"message": "successfully deleted 1 row from table frog"}}, deleteRes)
 	})
 }
 

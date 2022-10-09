@@ -169,6 +169,8 @@ func (db *Database) Execute(command any) (*[]table.ColumnSet, error) {
 		return db.runUpdate(*typedCommand)
 	case *CommandDelete:
 		return db.runDelete(*typedCommand)
+	case *CommandRemoveDuplicates:
+		return db.runRemoveDuplicates(*typedCommand)
 	default:
 		return nil, fmt.Errorf("unknown command type: %T", typedCommand)
 	}
@@ -282,6 +284,26 @@ func (d *Database) runDelete(command CommandDelete) (*[]table.ColumnSet, error) 
 		return nil, err
 	}
 	rowsCount, err := to.DeleteRows(command.Conditions)
+	if err != nil {
+		return nil, err
+	}
+	return &[]table.ColumnSet{0: {"message": fmt.Sprintf("successfully deleted %d %s from table %s",
+		rowsCount,
+		english.PluralWord(int(rowsCount), "row", ""),
+		command.From)}}, nil
+}
+
+type CommandRemoveDuplicates struct {
+	From string
+}
+
+// Delete duplicate rows from db table
+func (d *Database) runRemoveDuplicates(command CommandRemoveDuplicates) (*[]table.ColumnSet, error) {
+	to, err := d.table(command.From)
+	if err != nil {
+		return nil, err
+	}
+	rowsCount, err := to.DeleteDuplicates()
 	if err != nil {
 		return nil, err
 	}

@@ -1,6 +1,6 @@
 # `frog-db`
 
-<img align="right" width="125" height="125" src="./docs/img/logo.svg">
+<img align="right" width="125" height="125" src="./img/logo.svg">
 
 _A database engine as small as a frog_
 

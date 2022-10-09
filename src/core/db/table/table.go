@@ -1,8 +1,11 @@
 package table
 
 import (
+	"fmt"
+	"hash/fnv"
 	"log"
 	"reflect"
+	"strings"
 	"sync"
 
 	"github.com/elliotchance/pie/v2"
@@ -131,6 +134,35 @@ func (t *T) DeleteRows(rawCondition ColumnSet) (uint, error) {
 	return uint(len(*ids)), nil
 }
 
+// Update rows from table
+func (t *T) DeleteDuplicates() (uint, error) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	columnNames := make([]string, 0, len(t.schema))
+	for k := range t.schema {
+		columnNames = append(columnNames, k)
+	}
+	uniqueSet := Set{}
+	deleted := uint(0)
+	for i, row := range t.data {
+		orderedColumnsStr := strings.Builder{}
+		for _, columnName := range columnNames {
+			_, err := orderedColumnsStr.WriteString(fmt.Sprint(row[columnName]))
+			if err != nil {
+				return 0, err
+			}
+		}
+		rowHash := hash(orderedColumnsStr.String())
+		if _, ok := uniqueSet[fmt.Sprint(rowHash)]; ok {
+			t.data = append(t.data[:i], t.data[i+1:]...)
+			deleted++
+		} else {
+			uniqueSet[fmt.Sprint(rowHash)] = void{}
+		}
+	}
+	return deleted, nil
+}
+
 // Select data from table,
 // empty columns list and empty conditions considered as "select all"
 func (t *T) SelectRows(columns *[]string, conditions ColumnSet) (*[]ColumnSet, error) {
@@ -223,3 +255,12 @@ func MapKeys[T any](input map[string]T) []string {
 	return result
 
 }
+
+func hash(s string) uint32 {
+	h := fnv.New32a()
+	h.Write([]byte(s))
+	return h.Sum32()
+}
+
+type Set map[string]void
+type void struct{}
