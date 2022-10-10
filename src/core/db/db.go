@@ -12,14 +12,13 @@ import (
 	"github.com/dustin/go-humanize/english"
 	"github.com/ssyrota/frog-db/src/core/db/schema"
 	"github.com/ssyrota/frog-db/src/core/db/table"
-	dbtypes "github.com/ssyrota/frog-db/src/core/db/types"
 	errs "github.com/ssyrota/frog-db/src/core/err"
 )
 
 type Dump []table.Dump
 type Db interface {
 	Execute(command any) (*[]table.ColumnSet, error)
-	IntrospectSchema(name string) (schema.T, error)
+	IntrospectSchema() (map[string]schema.T, error)
 	StoreDump() error
 	JsonDump() <-chan DumpMsg
 	FromDump(dumpPath string) error
@@ -146,12 +145,12 @@ func (db *Database) JsonDump() <-chan DumpMsg {
 }
 
 // IntrospectSchema implementation.
-func (db *Database) IntrospectSchema(name string) (map[string]dbtypes.Type, error) {
-	table, err := db.table(name)
-	if err != nil {
-		return nil, err
+func (db *Database) IntrospectSchema() (map[string]schema.T, error) {
+	dbSchema := map[string]schema.T{}
+	for k, t := range db.tables {
+		dbSchema[k] = t.Schema()
 	}
-	return table.Schema(), nil
+	return dbSchema, nil
 }
 
 // Execute implementation.

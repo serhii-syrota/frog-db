@@ -42,9 +42,9 @@ func TestExecute(t *testing.T) {
 				createRes, err := db.Execute(validCreateCommand)
 				assert.Nil(t, err)
 				assert.Equal(t, (*createRes)[0]["message"], fmt.Sprintf("successfully created table %s", tableName))
-				introspectionRes, err := db.IntrospectSchema(tableName)
+				introspectionRes, err := db.IntrospectSchema()
 				assert.Nil(t, err)
-				assert.Equal(t, introspectionRes, validTableSchema)
+				assert.Equal(t, introspectionRes[tableName], validTableSchema)
 			},
 		)
 		t.Run("fails on create table with duplicate name",
