@@ -1,4 +1,11 @@
-# Release binaries to GitHub.
+# Run tests
+test: gen-rest
+	@echo "==> Running tests"
+	@go test -cover ./... | grep -e "^[^?].*"
+	@echo "==> Complete"
+.PHONY: test
+
+# Release binaries to GitHub
 release:
 	@echo "==> Releasing"
 	@goreleaser -p 1 --rm-dist --config .goreleaser.yaml
@@ -12,13 +19,13 @@ pre-release:
 	@echo "==> Complete"
 .PHONY: pre-release
 
-# Run tests
-test: 
-	@echo "==> Running tests"
-	@go test -cover ./... | grep -e "^[^?].*"
-	@echo "==> Complete"
-.PHONY: test
-
+# Run tests with hotreload
 watch-tests:
 	@watch -n 2 make test
 .PHONY: watch-tests
+
+# Generate rest stub
+gen-rest:
+	@echo "==> Generating rest server stub"
+	@oapi-codegen --config ./src/web/server/.codegen.server.yaml  ./src/web/server/.openapi.yaml
+.PHONY: gen-rest
