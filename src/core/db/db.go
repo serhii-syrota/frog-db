@@ -8,7 +8,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/caarlos0/env/v6"
 	"github.com/dustin/go-humanize/english"
 	"github.com/ssyrota/frog-db/src/core/db/schema"
 	"github.com/ssyrota/frog-db/src/core/db/table"
@@ -28,19 +27,15 @@ type Database struct {
 	path   string
 }
 
-func New() (*Database, error) {
-	cfg := config{}
-	if err := env.Parse(&cfg); err != nil {
-		return nil, err
-	}
-	_, err := os.Create(cfg.Path)
+func New(path string, dumpInterval time.Duration) (*Database, error) {
+	_, err := os.Create(path)
 	if err != nil {
 		return nil, err
 	}
-	db := &Database{tables: make(map[string]*table.T), path: cfg.Path}
+	db := &Database{tables: make(map[string]*table.T), path: path}
 	// Run store dump interval job
 	go func() {
-		ticker := time.NewTicker(cfg.DumpInterval)
+		ticker := time.NewTicker(dumpInterval)
 		for range ticker.C {
 			err := db.StoreDump()
 			if err != nil {
