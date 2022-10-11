@@ -9,6 +9,8 @@ import (
 	"github.com/labstack/echo/v4"
 	echo_middleware "github.com/labstack/echo/v4/middleware"
 	"github.com/ssyrota/frog-db/src/core/db"
+	"github.com/ssyrota/frog-db/src/core/db/dbtypes"
+	"github.com/ssyrota/frog-db/src/core/db/schema"
 	"github.com/ssyrota/frog-db/src/web/server"
 )
 
@@ -28,17 +30,15 @@ func (s *WebServer) Run() error {
 		return err
 	}
 	r.Use(echo_middleware.Logger(), echo_middleware.Recover())
-	apiGroup := r.Group("", middleware.OapiRequestValidator(swaggerFile))
-	r.GET("/test", func(c echo.Context) error {
-		return c.String(http.StatusOK, "string")
-	})
-	server.RegisterHandlers(apiGroup, server.NewStrictHandler(&handler{s.db}, []server.StrictMiddlewareFunc{}))
+	server.RegisterHandlers(
+		r.Group("", middleware.OapiRequestValidator(swaggerFile)),
+		server.NewStrictHandler(&handler{s.db}, []server.StrictMiddlewareFunc{}))
 
 	swagger, err := server.GetSwagger()
 	if err != nil {
 		return fmt.Errorf("get swagger: %w", err)
 	}
-	err = RegisterSwaggerHandler(r, "http://localhost:8080", swagger)
+	err = RegisterSwaggerHandler(r, swagger)
 	if err != nil {
 		return fmt.Errorf("swagger register: %w", err)
 	}
@@ -54,7 +54,20 @@ var _ server.StrictServerInterface = new(handler)
 
 // CreateTable implementation.
 func (h *handler) CreateTable(ctx context.Context, request server.CreateTableRequestObject) (server.CreateTableResponseObject, error) {
-	return nil, nil
+	tableSchema := schema.T{}
+	for _, s := range *request.Body.Schema {
+		tableSchema[s.Column] = dbtypes.Type(s.Type)
+	}
+	res, err := h.db.Execute(&db.CommandCreateTable{Name: *request.Body.TableName, Schema: tableSchema})
+	if err != nil {
+		return server.CreateTabledefaultJSONResponse{Body: server.Error{Message: err.Error()}, StatusCode: http.StatusConflict}, nil
+	}
+	message, ok := (*res)[0]["message"].(string)
+	if !ok {
+		return server.CreateTabledefaultJSONResponse{Body: server.Error{Message: "failed to create table"}, StatusCode: http.StatusInternalServerError}, nil
+	}
+
+	return server.CreateTable200JSONResponse{Message: message}, nil
 }
 
 // DeleteTable implementation.
@@ -99,7 +112,9 @@ func (h *handler) DbSchema(ctx context.Context, request server.DbSchemaRequestOb
 		for column, columnType := range tableSchema {
 			schema = append(schema, server.Schema{Column: column, Type: server.SchemaType(columnType)})
 		}
-		res = append(res, server.TableSchema{TableName: &tableName, Schema: &schema})
+		// Prevent range value pointer reference bug
+		tableNameCopy := tableName
+		res = append(res, server.TableSchema{TableName: &tableNameCopy, Schema: &schema})
 	}
 
 	return res, nil

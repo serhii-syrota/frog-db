@@ -1,7 +1,7 @@
 package schema
 
 import (
-	dbtypes "github.com/ssyrota/frog-db/src/core/db/types"
+	dbtypes "github.com/ssyrota/frog-db/src/core/db/dbtypes"
 	errs "github.com/ssyrota/frog-db/src/core/err"
 )
 

@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
+	dbtypes "github.com/ssyrota/frog-db/src/core/db/dbtypes"
 	"github.com/ssyrota/frog-db/src/core/db/schema"
 	"github.com/ssyrota/frog-db/src/core/db/table"
-	dbtypes "github.com/ssyrota/frog-db/src/core/db/types"
 	errs "github.com/ssyrota/frog-db/src/core/err"
 	"github.com/stretchr/testify/assert"
 )

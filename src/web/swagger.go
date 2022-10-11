@@ -8,12 +8,12 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func RegisterSwaggerHandler(r *echo.Echo, rootPath string, swagger *openapi3.T) error {
+func RegisterSwaggerHandler(r *echo.Echo, swagger *openapi3.T) error {
 	swaggerMarshaled, err := swagger.MarshalJSON()
 	if err != nil {
 		return fmt.Errorf("swagger marshal: %w", err)
 	}
-	swaggerPage := SwaggerStaticHtml(rootPath + "/docs/.json")
+	swaggerPage := SwaggerStaticHtml()
 
 	r.GET("/docs", func(c echo.Context) error {
 		return c.HTML(http.StatusOK, swaggerPage)
@@ -23,7 +23,7 @@ func RegisterSwaggerHandler(r *echo.Echo, rootPath string, swagger *openapi3.T) 
 	})
 	return nil
 }
-func SwaggerStaticHtml(specJsonPath string) string {
+func SwaggerStaticHtml() string {
 	return `<!DOCTYPE html>
 	<html lang="en">
 	<head>
@@ -43,7 +43,7 @@ func SwaggerStaticHtml(specJsonPath string) string {
 	  <script>
 		window.onload = () => {
 		  window.ui = SwaggerUIBundle({
-			url: "` + specJsonPath + `",
+			url: "` + "http://localhost:8080" + `/docs/.json",
 			dom_id: '#swagger-ui',
 		  });
 		};
