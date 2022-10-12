@@ -73,12 +73,6 @@ type UpdateBody struct {
 	Data       Row `json:"data"`
 }
 
-// DeleteRowsParams defines parameters for DeleteRows.
-type DeleteRowsParams struct {
-	// Conditions delete conditions
-	Conditions Row `form:"conditions" json:"conditions"`
-}
-
 // SelectRowsParams defines parameters for SelectRows.
 type SelectRowsParams struct {
 	// Conditions conditions
@@ -97,20 +91,20 @@ type UpdateRowsJSONRequestBody = UpdateBody
 // InsertRowsJSONRequestBody defines body for InsertRows for application/json ContentType.
 type InsertRowsJSONRequestBody = Rows
 
+// DeleteRowsJSONRequestBody defines body for DeleteRows for application/json ContentType.
+type DeleteRowsJSONRequestBody = Row
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 
 	// (GET /.schema)
 	DbSchema(ctx echo.Context) error
 
-	// (DELETE /table)
-	DeleteTable(ctx echo.Context) error
+	// (POST /delete-table/{name}/)
+	DeleteTable(ctx echo.Context, name string) error
 
 	// (POST /table)
 	CreateTable(ctx echo.Context) error
-
-	// (DELETE /table/{name})
-	DeleteRows(ctx echo.Context, name string, params DeleteRowsParams) error
 
 	// (GET /table/{name})
 	SelectRows(ctx echo.Context, name string, params SelectRowsParams) error
@@ -121,7 +115,10 @@ type ServerInterface interface {
 	// (POST /table/{name})
 	InsertRows(ctx echo.Context, name string) error
 
-	// (DELETE /table/{name}/duplicates)
+	// (POST /table/{name}/delete)
+	DeleteRows(ctx echo.Context, name string) error
+
+	// (POST /table/{name}/remove-duplicates)
 	DeleteDuplicateRows(ctx echo.Context, name string) error
 }
 
@@ -142,9 +139,16 @@ func (w *ServerInterfaceWrapper) DbSchema(ctx echo.Context) error {
 // DeleteTable converts echo context to params.
 func (w *ServerInterfaceWrapper) DeleteTable(ctx echo.Context) error {
 	var err error
+	// ------------- Path parameter "name" -------------
+	var name string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "name", runtime.ParamLocationPath, ctx.Param("name"), &name)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter name: %s", err))
+	}
 
 	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.DeleteTable(ctx)
+	err = w.Handler.DeleteTable(ctx, name)
 	return err
 }
 
@@ -154,31 +158,6 @@ func (w *ServerInterfaceWrapper) CreateTable(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshalled arguments
 	err = w.Handler.CreateTable(ctx)
-	return err
-}
-
-// DeleteRows converts echo context to params.
-func (w *ServerInterfaceWrapper) DeleteRows(ctx echo.Context) error {
-	var err error
-	// ------------- Path parameter "name" -------------
-	var name string
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "name", runtime.ParamLocationPath, ctx.Param("name"), &name)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter name: %s", err))
-	}
-
-	// Parameter object where we will unmarshal all parameters from the context
-	var params DeleteRowsParams
-	// ------------- Required query parameter "conditions" -------------
-
-	err = runtime.BindQueryParameter("form", true, true, "conditions", ctx.QueryParams(), &params.Conditions)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter conditions: %s", err))
-	}
-
-	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.DeleteRows(ctx, name, params)
 	return err
 }
 
@@ -246,6 +225,22 @@ func (w *ServerInterfaceWrapper) InsertRows(ctx echo.Context) error {
 	return err
 }
 
+// DeleteRows converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteRows(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "name" -------------
+	var name string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "name", runtime.ParamLocationPath, ctx.Param("name"), &name)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter name: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshalled arguments
+	err = w.Handler.DeleteRows(ctx, name)
+	return err
+}
+
 // DeleteDuplicateRows converts echo context to params.
 func (w *ServerInterfaceWrapper) DeleteDuplicateRows(ctx echo.Context) error {
 	var err error
@@ -291,13 +286,13 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	}
 
 	router.GET(baseURL+"/.schema", wrapper.DbSchema)
-	router.DELETE(baseURL+"/table", wrapper.DeleteTable)
+	router.POST(baseURL+"/delete-table/:name/", wrapper.DeleteTable)
 	router.POST(baseURL+"/table", wrapper.CreateTable)
-	router.DELETE(baseURL+"/table/:name", wrapper.DeleteRows)
 	router.GET(baseURL+"/table/:name", wrapper.SelectRows)
 	router.PATCH(baseURL+"/table/:name", wrapper.UpdateRows)
 	router.POST(baseURL+"/table/:name", wrapper.InsertRows)
-	router.DELETE(baseURL+"/table/:name/duplicates", wrapper.DeleteDuplicateRows)
+	router.POST(baseURL+"/table/:name/delete", wrapper.DeleteRows)
+	router.POST(baseURL+"/table/:name/remove-duplicates", wrapper.DeleteDuplicateRows)
 
 }
 
@@ -330,6 +325,7 @@ func (response DbSchemadefaultJSONResponse) VisitDbSchemaResponse(w http.Respons
 }
 
 type DeleteTableRequestObject struct {
+	Name string `json:"name"`
 }
 
 type DeleteTableResponseObject interface {
@@ -380,36 +376,6 @@ type CreateTabledefaultJSONResponse struct {
 }
 
 func (response CreateTabledefaultJSONResponse) VisitCreateTableResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(response.StatusCode)
-
-	return json.NewEncoder(w).Encode(response.Body)
-}
-
-type DeleteRowsRequestObject struct {
-	Name   string `json:"name"`
-	Params DeleteRowsParams
-}
-
-type DeleteRowsResponseObject interface {
-	VisitDeleteRowsResponse(w http.ResponseWriter) error
-}
-
-type DeleteRows200JSONResponse Info
-
-func (response DeleteRows200JSONResponse) VisitDeleteRowsResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type DeleteRowsdefaultJSONResponse struct {
-	Body       Error
-	StatusCode int
-}
-
-func (response DeleteRowsdefaultJSONResponse) VisitDeleteRowsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(response.StatusCode)
 
@@ -506,6 +472,36 @@ func (response InsertRowsdefaultJSONResponse) VisitInsertRowsResponse(w http.Res
 	return json.NewEncoder(w).Encode(response.Body)
 }
 
+type DeleteRowsRequestObject struct {
+	Name string `json:"name"`
+	Body *DeleteRowsJSONRequestBody
+}
+
+type DeleteRowsResponseObject interface {
+	VisitDeleteRowsResponse(w http.ResponseWriter) error
+}
+
+type DeleteRows200JSONResponse Info
+
+func (response DeleteRows200JSONResponse) VisitDeleteRowsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteRowsdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response DeleteRowsdefaultJSONResponse) VisitDeleteRowsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+
+	return json.NewEncoder(w).Encode(response.Body)
+}
+
 type DeleteDuplicateRowsRequestObject struct {
 	Name string `json:"name"`
 }
@@ -541,14 +537,11 @@ type StrictServerInterface interface {
 	// (GET /.schema)
 	DbSchema(ctx context.Context, request DbSchemaRequestObject) (DbSchemaResponseObject, error)
 
-	// (DELETE /table)
+	// (POST /delete-table/{name}/)
 	DeleteTable(ctx context.Context, request DeleteTableRequestObject) (DeleteTableResponseObject, error)
 
 	// (POST /table)
 	CreateTable(ctx context.Context, request CreateTableRequestObject) (CreateTableResponseObject, error)
-
-	// (DELETE /table/{name})
-	DeleteRows(ctx context.Context, request DeleteRowsRequestObject) (DeleteRowsResponseObject, error)
 
 	// (GET /table/{name})
 	SelectRows(ctx context.Context, request SelectRowsRequestObject) (SelectRowsResponseObject, error)
@@ -559,7 +552,10 @@ type StrictServerInterface interface {
 	// (POST /table/{name})
 	InsertRows(ctx context.Context, request InsertRowsRequestObject) (InsertRowsResponseObject, error)
 
-	// (DELETE /table/{name}/duplicates)
+	// (POST /table/{name}/delete)
+	DeleteRows(ctx context.Context, request DeleteRowsRequestObject) (DeleteRowsResponseObject, error)
+
+	// (POST /table/{name}/remove-duplicates)
 	DeleteDuplicateRows(ctx context.Context, request DeleteDuplicateRowsRequestObject) (DeleteDuplicateRowsResponseObject, error)
 }
 
@@ -600,8 +596,10 @@ func (sh *strictHandler) DbSchema(ctx echo.Context) error {
 }
 
 // DeleteTable operation middleware
-func (sh *strictHandler) DeleteTable(ctx echo.Context) error {
+func (sh *strictHandler) DeleteTable(ctx echo.Context, name string) error {
 	var request DeleteTableRequestObject
+
+	request.Name = name
 
 	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
 		return sh.ssi.DeleteTable(ctx.Request().Context(), request.(DeleteTableRequestObject))
@@ -645,32 +643,6 @@ func (sh *strictHandler) CreateTable(ctx echo.Context) error {
 		return err
 	} else if validResponse, ok := response.(CreateTableResponseObject); ok {
 		return validResponse.VisitCreateTableResponse(ctx.Response())
-	} else if response != nil {
-		return fmt.Errorf("Unexpected response type: %T", response)
-	}
-	return nil
-}
-
-// DeleteRows operation middleware
-func (sh *strictHandler) DeleteRows(ctx echo.Context, name string, params DeleteRowsParams) error {
-	var request DeleteRowsRequestObject
-
-	request.Name = name
-	request.Params = params
-
-	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.DeleteRows(ctx.Request().Context(), request.(DeleteRowsRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "DeleteRows")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		return err
-	} else if validResponse, ok := response.(DeleteRowsResponseObject); ok {
-		return validResponse.VisitDeleteRowsResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("Unexpected response type: %T", response)
 	}
@@ -765,6 +737,37 @@ func (sh *strictHandler) InsertRows(ctx echo.Context, name string) error {
 	return nil
 }
 
+// DeleteRows operation middleware
+func (sh *strictHandler) DeleteRows(ctx echo.Context, name string) error {
+	var request DeleteRowsRequestObject
+
+	request.Name = name
+
+	var body DeleteRowsJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteRows(ctx.Request().Context(), request.(DeleteRowsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteRows")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(DeleteRowsResponseObject); ok {
+		return validResponse.VisitDeleteRowsResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("Unexpected response type: %T", response)
+	}
+	return nil
+}
+
 // DeleteDuplicateRows operation middleware
 func (sh *strictHandler) DeleteDuplicateRows(ctx echo.Context, name string) error {
 	var request DeleteDuplicateRowsRequestObject
@@ -793,21 +796,22 @@ func (sh *strictHandler) DeleteDuplicateRows(ctx echo.Context, name string) erro
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
+	"BQAA///zpft+jhUAAA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

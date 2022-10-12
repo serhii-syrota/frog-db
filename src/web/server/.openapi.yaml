@@ -30,10 +30,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /table:
-    delete:
+  /delete-table/{name}/:
+    post:
       description: Delete db table
       operationId: delete table
+      parameters: 
+        - in: path
+          name: name
+          schema:
+            type: string
+          required: true
+          description: table name
       responses:
           '200':
             description: delete response
@@ -47,6 +54,7 @@ paths:
               application/json:
                 schema:
                   $ref: '#/components/schemas/Error'
+  /table:
     post:
       description: create db table
       operationId: create table
@@ -166,9 +174,10 @@ paths:
               application/json:
                 schema:
                   $ref: '#/components/schemas/Error'
-    delete:
-      description: delete rows from table by condition
-      operationId: delete rows
+  /table/{name}/remove-duplicates:
+    post:
+      description: delete duplicate rows from table
+      operationId: delete duplicate rows
       parameters: 
         - in: path
           name: name
@@ -176,12 +185,6 @@ paths:
             type: string
           required: true
           description: table name
-        - in: query
-          name: conditions
-          schema:
-            $ref: '#/components/schemas/Row'
-          required: true
-          description: delete conditions
       responses:
           '200':
             description: delete response
@@ -195,10 +198,10 @@ paths:
               application/json:
                 schema:
                   $ref: '#/components/schemas/Error'
-  /table/{name}/duplicates:
-    delete:
-      description: delete duplicate rows from table
-      operationId: delete duplicate rows
+  /table/{name}/delete:
+    post:
+      description: delete rows from table by condition
+      operationId: delete rows
       parameters: 
         - in: path
           name: name
@@ -206,6 +209,13 @@ paths:
             type: string
           required: true
           description: table name
+      requestBody: 
+        description: column rows
+        required: true
+        content: 
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Row'
       responses:
           '200':
             description: delete response
