@@ -116,6 +116,5 @@ func (h *handler) DbSchema(ctx context.Context, request server.DbSchemaRequestOb
 		tableNameCopy := tableName
 		res = append(res, server.TableSchema{TableName: &tableNameCopy, Schema: &schema})
 	}
-
 	return res, nil
 }

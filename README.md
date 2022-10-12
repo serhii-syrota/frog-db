@@ -29,6 +29,7 @@ You can read about each module in the docs:
 
 - [Architecture](./docs/architecture.md)
 - [Testing](./docs/testing.md)
+- [Rest](./docs/rest.md)
 
 ## Credits
 
