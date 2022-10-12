@@ -138,7 +138,7 @@ func (h *handler) SelectRows(ctx context.Context, request server.SelectRowsReque
 	if err != nil {
 		return server.SelectRowsdefaultJSONResponse{Body: server.Error{Message: err.Error()}, StatusCode: http.StatusConflict}, nil
 	}
-	response := server.SelectRows200JSONResponse{}
+	response := make(server.SelectRows200JSONResponse, len(*res))
 	for i, val := range *res {
 		response[i] = ColumnSetToRows(val)
 	}
