@@ -29,3 +29,8 @@ gen-rest:
 	@echo "==> Generating rest server stub"
 	@oapi-codegen --config ./src/web/server/.codegen.server.yaml  ./src/web/server/.openapi.yaml
 .PHONY: gen-rest
+
+# Run deamon with hot reload
+hot-deamon:
+	@air -build.cmd "go build -o ./tmp/main ./src/bin/daemon/main.go"
+.PHONY: hot-deamon
