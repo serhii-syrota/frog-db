@@ -263,7 +263,7 @@ func TestDump(t *testing.T) {
 
 		os.Setenv("DUMP_PATH", ".new_dump.json")
 		defer os.Remove(".new_dump.json")
-		newDb, err := New(dumpPath, time.Second)
+		newDb, err := New(".new_dump.json", time.Second)
 		assert.NoError(t, err)
 		err = newDb.FromDump(dumpPath)
 		assert.NoError(t, err)
