@@ -78,6 +78,38 @@ paths:
               application/json:
                 schema:
                   $ref: '#/components/schemas/Error'
+  /table/{name}/select:
+    post:
+      description: select rows from table
+      operationId: select rows
+      parameters: 
+        - in: path
+          name: name
+          schema:
+            type: string
+          required: true
+          description: table name
+      requestBody: 
+        description: select body
+        required: true
+        content: 
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SelectBody'
+
+      responses:
+          '200':
+            description: select response
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Rows'
+          default:
+            description: error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
   /table/{name}:
     post:
       description: insert rows to table
@@ -103,41 +135,6 @@ paths:
               application/json:
                 schema:
                   $ref: '#/components/schemas/Info'
-          default:
-            description: error
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/Error'
-    get:
-      description: select rows from table
-      operationId: select rows
-      parameters: 
-        - in: path
-          name: name
-          schema:
-            type: string
-          required: true
-          description: table name
-        - in: query
-          name: conditions
-          schema:
-            $ref: '#/components/schemas/Row'
-          required: true
-          description: conditions
-        - in: query
-          name: columns
-          schema:
-            $ref: '#/components/schemas/RowNames'
-          required: true
-          description: returned columns
-      responses:
-          '200':
-            description: select response
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/Rows'
           default:
             description: error
             content:
@@ -271,6 +268,18 @@ components:
       properties:
         message:
           type: string
+          
+    SelectBody:
+      type: object
+      required:
+        - columns
+        - conditions
+      properties:
+        columns:
+          $ref: '#/components/schemas/RowNames'
+        conditions:
+          $ref: '#/components/schemas/Row'
+          
     DeleteBody:
       type: object
       required: 

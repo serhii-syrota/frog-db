@@ -11,6 +11,7 @@ import (
 	"github.com/ssyrota/frog-db/src/core/db"
 	"github.com/ssyrota/frog-db/src/core/db/dbtypes"
 	"github.com/ssyrota/frog-db/src/core/db/schema"
+	"github.com/ssyrota/frog-db/src/core/db/table"
 	"github.com/ssyrota/frog-db/src/web/server"
 )
 
@@ -72,32 +73,91 @@ func (h *handler) CreateTable(ctx context.Context, request server.CreateTableReq
 
 // DeleteTable implementation.
 func (h *handler) DeleteTable(ctx context.Context, request server.DeleteTableRequestObject) (server.DeleteTableResponseObject, error) {
-	return nil, nil
+	res, err := h.db.Execute(&db.CommandDropTable{Name: request.Name})
+	if err != nil {
+		return server.DeleteTabledefaultJSONResponse{Body: server.Error{Message: err.Error()}, StatusCode: http.StatusConflict}, nil
+	}
+	message, ok := (*res)[0]["message"].(string)
+	if !ok {
+		return server.DeleteTabledefaultJSONResponse{Body: server.Error{Message: "failed to drop table"}, StatusCode: http.StatusInternalServerError}, nil
+	}
+
+	return server.DeleteTable200JSONResponse{Message: message}, nil
 }
 
 // DeleteDuplicateRows implementation.
 func (h *handler) DeleteDuplicateRows(ctx context.Context, request server.DeleteDuplicateRowsRequestObject) (server.DeleteDuplicateRowsResponseObject, error) {
-	return nil, nil
+	res, err := h.db.Execute(&db.CommandRemoveDuplicates{From: request.Name})
+	if err != nil {
+		return server.DeleteDuplicateRowsdefaultJSONResponse{Body: server.Error{Message: err.Error()}, StatusCode: http.StatusConflict}, nil
+	}
+	message, ok := (*res)[0]["message"].(string)
+	if !ok {
+		return server.DeleteDuplicateRowsdefaultJSONResponse{Body: server.Error{Message: "failed to drop table"}, StatusCode: http.StatusInternalServerError}, nil
+	}
+
+	return server.DeleteDuplicateRows200JSONResponse{Message: message}, nil
 }
 
 // DeleteRows implementation.
 func (h *handler) DeleteRows(ctx context.Context, request server.DeleteRowsRequestObject) (server.DeleteRowsResponseObject, error) {
-	return nil, nil
+	res, err := h.db.Execute(&db.CommandDelete{From: request.Name, Conditions: RowToColumnSet(*request.Body)})
+	if err != nil {
+		return server.DeleteRowsdefaultJSONResponse{Body: server.Error{Message: err.Error()}, StatusCode: http.StatusConflict}, nil
+	}
+	message, ok := (*res)[0]["message"].(string)
+	if !ok {
+		return server.DeleteRowsdefaultJSONResponse{Body: server.Error{Message: "failed to delete rows"}, StatusCode: http.StatusInternalServerError}, nil
+	}
+
+	return server.DeleteRows200JSONResponse{Message: message}, nil
 }
 
 // InsertRows implementation.
 func (h *handler) InsertRows(ctx context.Context, request server.InsertRowsRequestObject) (server.InsertRowsResponseObject, error) {
-	return nil, nil
+	data := make([]table.ColumnSet, len(*request.Body))
+	for i, v := range *request.Body {
+		data[i] = RowToColumnSet(v)
+	}
+	res, err := h.db.Execute(&db.CommandInsert{To: request.Name, Data: &data})
+	if err != nil {
+		return server.InsertRowsdefaultJSONResponse{Body: server.Error{Message: err.Error()}, StatusCode: http.StatusConflict}, nil
+	}
+	message, ok := (*res)[0]["message"].(string)
+	if !ok {
+		return server.InsertRowsdefaultJSONResponse{Body: server.Error{Message: "failed to insert rows"}, StatusCode: http.StatusInternalServerError}, nil
+	}
+	return server.InsertRows200JSONResponse{Message: message}, nil
 }
 
 // SelectRows implementation.
 func (h *handler) SelectRows(ctx context.Context, request server.SelectRowsRequestObject) (server.SelectRowsResponseObject, error) {
-	return nil, nil
+	columns := request.Body.Columns
+	conditions := RowToColumnSet(request.Body.Conditions)
+	res, err := h.db.Execute(&db.CommandSelect{From: request.Name, Conditions: conditions, Fields: &columns})
+	if err != nil {
+		return server.SelectRowsdefaultJSONResponse{Body: server.Error{Message: err.Error()}, StatusCode: http.StatusConflict}, nil
+	}
+	response := server.SelectRows200JSONResponse{}
+	for i, val := range *res {
+		response[i] = ColumnSetToRows(val)
+	}
+	return response, nil
 }
 
 // UpdateRows implementation.
 func (h *handler) UpdateRows(ctx context.Context, request server.UpdateRowsRequestObject) (server.UpdateRowsResponseObject, error) {
-	return nil, nil
+	conditions := RowToColumnSet(request.Body.Conditions)
+	data := RowToColumnSet(request.Body.Data)
+	res, err := h.db.Execute(&db.CommandUpdate{TableName: request.Name, Conditions: conditions, Data: data})
+	if err != nil {
+		return server.UpdateRowsdefaultJSONResponse{Body: server.Error{Message: err.Error()}, StatusCode: http.StatusConflict}, nil
+	}
+	message, ok := (*res)[0]["message"].(string)
+	if !ok {
+		return server.UpdateRowsdefaultJSONResponse{Body: server.Error{Message: "failed to update rows"}, StatusCode: http.StatusInternalServerError}, nil
+	}
+	return server.UpdateRows200JSONResponse{Message: message}, nil
 }
 
 // DbSchema implementation.
@@ -117,4 +177,19 @@ func (h *handler) DbSchema(ctx context.Context, request server.DbSchemaRequestOb
 		res = append(res, server.TableSchema{TableName: &tableNameCopy, Schema: &schema})
 	}
 	return res, nil
+}
+
+func RowToColumnSet(row server.Row) table.ColumnSet {
+	res := table.ColumnSet{}
+	for k, v := range row {
+		res[k] = v
+	}
+	return res
+}
+func ColumnSetToRows(row table.ColumnSet) server.Row {
+	res := server.Row{}
+	for k, v := range row {
+		res[k] = v
+	}
+	return res
 }
