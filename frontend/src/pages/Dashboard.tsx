@@ -1,14 +1,22 @@
-import { Delete, Memory, TableRows } from '@mui/icons-material';
+import { Add, Delete, Memory, TableRows } from '@mui/icons-material';
 import {
   AppBar,
   Avatar,
+  Button,
   Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Fab,
   IconButton,
   List,
   ListItem,
   ListItemAvatar,
   ListItemText,
   Toolbar,
+  Tooltip,
 } from '@mui/material';
 import { Fragment, useEffect, useState } from 'react';
 import { api } from '../api';
@@ -42,20 +50,37 @@ export const Dashboard = () => {
       {err ? (
         <div>Error: ${err.message}</div>
       ) : (
-        <Container maxWidth="md">
-          <List>
-            {tables.map((e) => {
-              return (
-                <TableItem
-                  tableName={e.tableName}
-                  updateTables={updateTables}
-                />
-              );
-            })}
-          </List>
-        </Container>
+        <>
+          <Container maxWidth="md">
+            <List>
+              {tables.map((e) => {
+                return (
+                  <TableItem
+                    tableName={e.tableName}
+                    updateTables={updateTables}
+                  />
+                );
+              })}
+            </List>
+          </Container>
+          <AddTable />
+        </>
       )}
     </Fragment>
+  );
+};
+
+const AddTable = () => {
+  return (
+    <Fab
+      sx={{ position: 'fixed', bottom: 16, right: 16 }}
+      color="primary"
+      aria-label="add"
+      variant="extended"
+    >
+      <Add />
+      Add table
+    </Fab>
   );
 };
 
@@ -69,16 +94,13 @@ const TableItem = ({
   return (
     <ListItem
       secondaryAction={
-        <IconButton
-          onClick={() => {
+        <DeleteTable
+          tableName={tableName}
+          dropTable={() => {
             api.dropTable(tableName);
             updateTables();
           }}
-          edge="end"
-          aria-label="delete"
-        >
-          <Delete />
-        </IconButton>
+        />
       }
     >
       <ListItemAvatar>
@@ -88,5 +110,68 @@ const TableItem = ({
       </ListItemAvatar>
       <ListItemText primary={tableName} />
     </ListItem>
+  );
+};
+
+const DeleteTable = ({
+  tableName,
+  dropTable,
+}: {
+  tableName: string;
+  dropTable: () => void;
+}) => {
+  const [open, setOpen] = useState(false);
+
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  return (
+    <div>
+      <Tooltip title="Delete">
+        <IconButton
+          onClick={() => {
+            handleClickOpen();
+          }}
+          edge="end"
+          aria-label="delete"
+        >
+          <Delete />
+        </IconButton>
+      </Tooltip>
+
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          {`Are you sure to drop table ${tableName}?`}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            You might be able to restore the table after deletion.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose}>Cancel</Button>
+          <Button
+            onClick={() => {
+              handleClose();
+              dropTable();
+            }}
+            color={'error'}
+            autoFocus
+          >
+            Drop
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </div>
   );
 };
