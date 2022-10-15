@@ -34,3 +34,15 @@ gen-rest:
 hot-deamon:
 	@air -build.cmd "go build -o ./tmp/main ./src/bin/daemon/main.go"
 .PHONY: hot-deamon
+
+# Generate frogdb frontend api sdk
+frontend-sdk-gen:
+	@docker run --rm \
+		-v ${PWD}:/local openapitools/openapi-generator-cli generate \
+		-i /local/src/web/server/.openapi.yaml \
+		-g typescript-axios \
+		-o /local/frontend/src/apiCodegen
+
+	# delete all files but with .ts extension
+	@cd ./frontend/src/apiCodegen/; find . -not -name '*ts' -print0 | xargs -0  -I {} rm -r {}
+.PHONY: frontend-sdk-gen
