@@ -30,7 +30,7 @@ func (s *WebServer) Run() error {
 	if err != nil {
 		return err
 	}
-	r.Use(echo_middleware.Logger(), echo_middleware.Recover())
+	r.Use(echo_middleware.Logger(), echo_middleware.Recover(), echo_middleware.CORS())
 	server.RegisterHandlers(
 		r.Group("", middleware.OapiRequestValidator(swaggerFile)),
 		server.NewStrictHandler(&handler{s.db}, []server.StrictMiddlewareFunc{}))
