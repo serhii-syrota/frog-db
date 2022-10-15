@@ -2,6 +2,7 @@ import * as apiGen from './apiCodegen';
 import { FutureResE } from './types';
 import { to } from 'await-to-js';
 
+export type DbSchema = Required<apiGen.TableSchema>[];
 class Api {
   constructor(private readonly _url: string) {}
   private readonly _client = apiGen.DefaultApiFp(
@@ -118,5 +119,3 @@ class Api {
 }
 
 export const api = new Api('http://localhost:8080');
-
-export type DbSchema = Required<apiGen.TableSchema>[];
