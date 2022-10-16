@@ -1,5 +1,10 @@
 import { Memory } from '@mui/icons-material';
-import { AppBar, ImageListItem, Toolbar } from '@mui/material';
+import {
+  AppBar,
+  Button,
+  ImageListItem,
+  Toolbar,
+} from '@mui/material';
 import { AxiosError } from 'axios';
 import { Fragment, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -13,6 +18,11 @@ export const TableView = () => {
   const [tableSchema, setTableSchema] = useState<apiGen.Schema[]>([]);
   const [rows, setRows] = useState<Record<string, unknown>[]>([]);
   const { name } = useParams<{ name: string }>();
+
+  const deleteDuplicatesClick = () => {
+    removeDuplicates(name!);
+    uploadRows(setRows, name!);
+  };
 
   useEffect(() => {
     uploadRows(setRows, name!);
@@ -33,9 +43,17 @@ export const TableView = () => {
         <DataGrid
           rows={rows.map((e, i) => ({ ...e, id: i }))}
           columns={schemaToColDef(tableSchema)}
-          pageSize={10}
+          autoPageSize
           rowsPerPageOptions={[10]}
+          density="comfortable"
         />
+        <Button
+          sx={{ bottom: '3%', right: '44%', position: 'fixed' }}
+          variant="contained"
+          onClick={deleteDuplicatesClick}
+        >
+          Remove duplicates
+        </Button>
       </div>
     </Fragment>
   );
@@ -95,7 +113,10 @@ const schemaToColDef = (schema: apiGen.Schema[]): GridColDef[] => {
           }
           return <div>{params.value}</div>;
         },
-        sortable: e.type !== apiGen.SchemaTypeEnum.Image,
+        filterable: e.type !== apiGen.SchemaTypeEnum.RealInv,
+        sortable:
+          e.type !== apiGen.SchemaTypeEnum.Image &&
+          e.type !== apiGen.SchemaTypeEnum.RealInv,
       })
     ),
   ];
@@ -109,4 +130,8 @@ const typeToColDef = (t: string) => {
     return 'number';
   }
   return 'string';
+};
+
+const removeDuplicates = (name: string) => {
+  return api.deleteDuplicateRows(name);
 };
