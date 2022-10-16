@@ -1,4 +1,4 @@
-import { Add, Delete, Memory, TableRows } from '@mui/icons-material';
+import { Delete, Memory, TableRows } from '@mui/icons-material';
 import {
   AppBar,
   Avatar,
@@ -9,7 +9,6 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-  Fab,
   IconButton,
   List,
   ListItem,
@@ -22,6 +21,7 @@ import { Fragment, useEffect, useState } from 'react';
 import { api } from '../api';
 import * as apiGen from '../apiCodegen';
 import { HeadLabel } from './components/HeadLabel';
+import { AddTable } from './CreateTable';
 
 export const Dashboard = () => {
   const [tables, setTables] = useState(
@@ -63,24 +63,10 @@ export const Dashboard = () => {
               })}
             </List>
           </Container>
-          <AddTable />
+          <AddTable updateTables={updateTables} />
         </>
       )}
     </Fragment>
-  );
-};
-
-const AddTable = () => {
-  return (
-    <Fab
-      sx={{ position: 'fixed', bottom: 16, right: 16 }}
-      color="primary"
-      aria-label="add"
-      variant="extended"
-    >
-      <Add />
-      Add table
-    </Fab>
   );
 };
 
@@ -121,11 +107,9 @@ const DeleteTable = ({
   dropTable: () => void;
 }) => {
   const [open, setOpen] = useState(false);
-
   const handleClickOpen = () => {
     setOpen(true);
   };
-
   const handleClose = () => {
     setOpen(false);
   };
@@ -134,9 +118,7 @@ const DeleteTable = ({
     <div>
       <Tooltip title="Delete">
         <IconButton
-          onClick={() => {
-            handleClickOpen();
-          }}
+          onClick={handleClickOpen}
           edge="end"
           aria-label="delete"
         >
