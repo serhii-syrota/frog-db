@@ -228,11 +228,16 @@ func TestExecute(t *testing.T) {
 		rows := &[]table.ColumnSet{
 			{"leg_length": float64(1), "jump": []float64{2.2, 3.3}},
 			{"leg_length": float64(1), "jump": []float64{2.2, 3.3}},
+			{"leg_length": float64(1), "jump": []float64{2.5, 3.5}},
+			{"leg_length": float64(1), "jump": []float64{2.5, 3.5}},
+			{"leg_length": float64(1), "jump": []float64{2.5, 3.5}},
+			{"leg_length": float64(1), "jump": []float64{2.5, 3.5}},
+			{"leg_length": float64(1), "jump": []float64{2.5, 3.5}},
 			{"leg_length": float64(1), "jump": []float64{2.5, 3.5}}}
 		db.Execute(&CommandInsert{"frog", rows})
 		deleteRes, err := db.Execute(&CommandRemoveDuplicates{"frog"})
 		assert.NoError(t, err)
-		assert.Equal(t, &[]table.ColumnSet{{"message": "successfully deleted 1 row from table frog"}}, deleteRes)
+		assert.Equal(t, &[]table.ColumnSet{{"message": "successfully deleted 6 rows from table frog"}}, deleteRes)
 	})
 }
 

@@ -142,9 +142,9 @@ func (t *T) DeleteDuplicates() (uint, error) {
 	for k := range t.schema {
 		columnNames = append(columnNames, k)
 	}
-	uniqueSet := Set{}
+	uniqueSet := Set[ColumnSet]{}
 	deleted := uint(0)
-	for i, row := range t.data {
+	for _, row := range t.data {
 		orderedColumnsStr := strings.Builder{}
 		for _, columnName := range columnNames {
 			_, err := orderedColumnsStr.WriteString(fmt.Sprint(row[columnName]))
@@ -154,11 +154,14 @@ func (t *T) DeleteDuplicates() (uint, error) {
 		}
 		rowHash := hash(orderedColumnsStr.String())
 		if _, ok := uniqueSet[fmt.Sprint(rowHash)]; ok {
-			t.data = append(t.data[:i], t.data[i+1:]...)
 			deleted++
 		} else {
-			uniqueSet[fmt.Sprint(rowHash)] = void{}
+			uniqueSet[fmt.Sprint(rowHash)] = row
 		}
+	}
+	t.data = []ColumnSet{}
+	for _, v := range uniqueSet {
+		t.data = append(t.data, v)
 	}
 	return deleted, nil
 }
@@ -262,5 +265,4 @@ func hash(s string) uint32 {
 	return h.Sum32()
 }
 
-type Set map[string]void
-type void struct{}
+type Set[T any] map[string]T
