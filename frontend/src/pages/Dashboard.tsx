@@ -13,6 +13,7 @@ import {
   List,
   ListItem,
   ListItemAvatar,
+  ListItemButton,
   ListItemText,
   Toolbar,
   Tooltip,
@@ -90,10 +91,6 @@ const TableItem = ({
 
   return (
     <ListItem
-      button
-      onClick={() => {
-        toTablePage();
-      }}
       secondaryAction={
         <DeleteTable
           tableName={tableName}
@@ -104,12 +101,18 @@ const TableItem = ({
         />
       }
     >
-      <ListItemAvatar>
-        <Avatar>
-          <TableRows />
-        </Avatar>
-      </ListItemAvatar>
-      <ListItemText primary={tableName} />
+      <ListItemButton
+        onClick={() => {
+          toTablePage();
+        }}
+      >
+        <ListItemAvatar>
+          <Avatar>
+            <TableRows />
+          </Avatar>
+        </ListItemAvatar>
+        <ListItemText primary={tableName} />
+      </ListItemButton>
     </ListItem>
   );
 };
