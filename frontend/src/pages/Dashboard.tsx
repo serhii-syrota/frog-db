@@ -53,14 +53,19 @@ export const Dashboard = () => {
         <>
           <Container maxWidth="md">
             <List>
-              {tables.map((e) => {
-                return (
-                  <TableItem
-                    tableName={e.tableName}
-                    updateTables={updateTables}
-                  />
-                );
-              })}
+              {tables
+                .sort((a, b) =>
+                  a.tableName.localeCompare(b.tableName)
+                )
+                .map((e, i) => {
+                  return (
+                    <TableItem
+                      key={i}
+                      tableName={e.tableName}
+                      updateTables={updateTables}
+                    />
+                  );
+                })}
             </List>
           </Container>
           <AddTable updateTables={updateTables} />
