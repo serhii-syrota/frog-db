@@ -21,9 +21,9 @@ import {
 import { Fragment, useEffect, useState } from 'react';
 import { api } from '../api';
 import * as apiGen from '../apiCodegen';
-import { HeadLabel } from './components/HeadLabel';
 import { AddTable } from './CreateTable';
 import { useNavigate } from 'react-router-dom';
+import { HeadLabelClickable } from './components/HeadLabel';
 
 export const Dashboard = () => {
   const [tables, setTables] = useState(
@@ -46,7 +46,9 @@ export const Dashboard = () => {
       <AppBar position="relative">
         <Toolbar>
           <Memory />
-          <HeadLabel>Dashboard</HeadLabel>
+          <HeadLabelClickable href="/dashboard">
+            Dashboard
+          </HeadLabelClickable>
         </Toolbar>
       </AppBar>
       {err ? (
