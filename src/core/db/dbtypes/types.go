@@ -3,7 +3,6 @@ package dbtypes
 
 import (
 	"fmt"
-	"net/url"
 	"reflect"
 
 	"github.com/spf13/cast"
@@ -97,10 +96,6 @@ func NewString(v any) (string, error) {
 
 func NewImage(v any) (string, error) {
 	res, err := cast.ToStringE(v)
-	if err != nil {
-		return "", err
-	}
-	_, err = url.Parse(res)
 	if err != nil {
 		return "", err
 	}

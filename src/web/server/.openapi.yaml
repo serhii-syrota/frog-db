@@ -304,6 +304,7 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/Row'
+      minItems: 0
     
     Row:
       type: object
@@ -313,6 +314,7 @@ components:
       type: array
       items:
         type: string
+      minItems: 0
     
     Error:
       type: object
