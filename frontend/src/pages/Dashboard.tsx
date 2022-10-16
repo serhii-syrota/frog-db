@@ -22,6 +22,7 @@ import { api } from '../api';
 import * as apiGen from '../apiCodegen';
 import { HeadLabel } from './components/HeadLabel';
 import { AddTable } from './CreateTable';
+import { useNavigate } from 'react-router-dom';
 
 export const Dashboard = () => {
   const [tables, setTables] = useState(
@@ -82,8 +83,17 @@ const TableItem = ({
   tableName: string;
   updateTables: () => void;
 }) => {
+  const navigate = useNavigate();
+  const toTablePage = () => {
+    navigate(`/table/${tableName}`);
+  };
+
   return (
     <ListItem
+      button
+      onClick={() => {
+        toTablePage();
+      }}
       secondaryAction={
         <DeleteTable
           tableName={tableName}
