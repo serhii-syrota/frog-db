@@ -15,7 +15,6 @@ func main() {
 		log.Fatal(err)
 	}
 }
-
 func load() error {
 	port := 8080
 	dumpPath := env.Get("DUMP_PATH")
