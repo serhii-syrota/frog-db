@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/spf13/cast"
 	"github.com/ssyrota/frog-db/src/core/db"
 	"github.com/ssyrota/frog-db/src/web"
 	"github.com/tj/go/env"
@@ -16,7 +17,7 @@ func main() {
 	}
 }
 func load() error {
-	port := 8080
+	port := cast.ToInt64(env.Get("PORT"))
 	dumpPath := env.Get("DUMP_PATH")
 	dumpInterval, err := time.ParseDuration(env.Get("DUMP_IVL"))
 	if err != nil {
