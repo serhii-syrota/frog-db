@@ -11,6 +11,7 @@ info:
     name: MIT
 servers:
   - url: http://localhost:8080
+  - url: https://frogdb.herokuapp.com
 
 paths:
   /.schema:
