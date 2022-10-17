@@ -1,0 +1,3 @@
+[submodule "frog-db-frontend"]
+	path = frog-db-frontend
+	url = https://github.com/ssyrota/frog-db-frontend
