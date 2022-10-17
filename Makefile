@@ -35,6 +35,11 @@ hot-deamon:
 	@air -build.cmd "go build -o ./tmp/main ./src/bin/daemon/main.go"
 .PHONY: hot-deamon
 
+# Run deamon
+deamon:
+	@go run src/bin/daemon/main.go
+.PHONY: deamon
+
 # Generate frogdb frontend api sdk
 frontend-sdk-gen:
 	@docker run --rm \
