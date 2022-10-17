@@ -46,8 +46,8 @@ frontend-sdk-gen:
 		-v ${PWD}:/local openapitools/openapi-generator-cli generate \
 		-i /local/src/web/server/.openapi.yaml \
 		-g typescript-axios \
-		-o /local/frontend/src/apiCodegen
+		-o /local/frog-db-frontend/src/apiCodegen
 
 	# delete all files but with .ts extension
-	@cd ./frontend/src/apiCodegen/; find . -not -name '*ts' -print0 | xargs -0  -I {} rm -r {}
+	@cd ./frog-db-frontend/src/apiCodegen/; find . -not -name '*ts' -print0 | xargs -0  -I {} rm -r {}
 .PHONY: frontend-sdk-gen
