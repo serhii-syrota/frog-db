@@ -6,6 +6,7 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/labstack/echo/v4"
+	"github.com/tj/go/env"
 )
 
 func RegisterSwaggerHandler(r *echo.Echo, swagger *openapi3.T) error {
@@ -24,6 +25,11 @@ func RegisterSwaggerHandler(r *echo.Echo, swagger *openapi3.T) error {
 	return nil
 }
 func SwaggerStaticHtml() string {
+	host := "https://frogdb.herokuapp.com"
+	if env.Get("ENV") == "DEV" {
+		host = "http://localhost:8080"
+	}
+
 	return `<!DOCTYPE html>
 	<html lang="en">
 	<head>
@@ -43,7 +49,7 @@ func SwaggerStaticHtml() string {
 	  <script>
 		window.onload = () => {
 		  window.ui = SwaggerUIBundle({
-			url: "` + "http://localhost:8080" + `/docs/.json",
+			url: "` + host + `/docs/.json",
 			dom_id: '#swagger-ui',
 		  });
 		};
