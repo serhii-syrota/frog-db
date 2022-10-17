@@ -40,6 +40,11 @@ deamon:
 	@go run src/bin/daemon/main.go
 .PHONY: deamon
 
+# Run frontend
+front:
+	@cd frog-db-frontend; yarn build-prod; yarn start
+.PHONY: deamon
+
 # Generate frogdb frontend api sdk
 frontend-sdk-gen:
 	@docker run --rm \

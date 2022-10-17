@@ -30,6 +30,26 @@ You can read about each module in the docs:
 - [Architecture](./docs/architecture.md)
 - [Testing](./docs/testing.md)
 - [Rest](./docs/rest.md)
+- [Frontend](./docs/deploy.md)
+- [Deployment](./docs/deploy.md)
+
+### Run daemon
+
+```bash
+make deamon
+```
+
+### Run frontend
+
+```bash
+make front
+```
+
+### Docker image
+
+```bash
+docker pull sergeycrisp/frogdb:latest
+```
 
 ## Credits
 
