@@ -19,4 +19,4 @@ dist/
 .env
 
 .dump*
-/tmp
+tmp
