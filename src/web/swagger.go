@@ -26,7 +26,7 @@ func RegisterSwaggerHandler(r *echo.Echo, swagger *openapi3.T) error {
 }
 func SwaggerStaticHtml() string {
 	host := "https://frogdb.herokuapp.com"
-	if env.Get("ENV") == "DEV" {
+	if env.GetDefault("ENV", "DEV") == "DEV" {
 		host = "http://localhost:8080"
 	}
 

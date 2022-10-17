@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/deepmap/oapi-codegen/pkg/middleware"
 	"github.com/labstack/echo/v4"
 	echo_middleware "github.com/labstack/echo/v4/middleware"
 	"github.com/ssyrota/frog-db/src/core/db"
@@ -26,13 +25,9 @@ type WebServer struct {
 
 func (s *WebServer) Run() error {
 	r := echo.New()
-	swaggerFile, err := server.GetSwagger()
-	if err != nil {
-		return err
-	}
 	r.Use(echo_middleware.Logger(), echo_middleware.Recover(), echo_middleware.CORS())
 	server.RegisterHandlers(
-		r.Group("", middleware.OapiRequestValidator(swaggerFile)),
+		r.Group(""),
 		server.NewStrictHandler(&handler{s.db}, []server.StrictMiddlewareFunc{}))
 
 	swagger, err := server.GetSwagger()

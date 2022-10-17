@@ -17,9 +17,9 @@ func main() {
 	}
 }
 func load() error {
-	port := cast.ToInt64(env.Get("PORT"))
-	dumpPath := env.Get("DUMP_PATH")
-	dumpInterval, err := time.ParseDuration(env.Get("DUMP_IVL"))
+	port := cast.ToInt64(env.GetDefault("PORT", "8080"))
+	dumpPath := env.GetDefault("DUMP_PATH", "dump.json")
+	dumpInterval, err := time.ParseDuration(env.GetDefault("DUMP_IVL", "1m"))
 	if err != nil {
 		return fmt.Errorf("parse dump ivl: %w", err)
 	}
