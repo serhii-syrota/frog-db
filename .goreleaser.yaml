@@ -3,6 +3,7 @@ env_files:
 archives:
 - format: binary
 build:
+  main: ./src/bin/daemon/main.go
   binary: frogdb
   ignore:
     - goarch: "386"
